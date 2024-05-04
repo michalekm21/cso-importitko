@@ -1,0 +1,8 @@
+query_template: "SELECT * FROM users WHERE {conditions}"
+parameters:
+  - name: "username"
+    type: "str"
+    help: "User's username to filter by"
+  - name: "age"
+    type: "int"
+    help: "Minimum age for filtering users"
