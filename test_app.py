@@ -11,7 +11,7 @@ def get_cmdline_args():
     parser.add_argument(
         '-f', '--filename', required=True, help='mongo json dump v zip')
     parser.add_argument(
-        '-o', '--output', required=True, help='mongo json dump v zip')
+        '-o', '--output', required=True, help='výstup v CSV')
 
     args = parser.parse_args()
 
