@@ -2,6 +2,7 @@
 import argparse
 import os
 from osgeo import ogr
+from dotenv import load_dotenv
 import logging
 
 
@@ -77,14 +78,27 @@ def setup_logging():
 
 
 def main():
+    env = load_dotenv(".env")
+    hostname = os.environ.get("DB_HOST")
+    database = os.environ.get("DB_NAME")
+    username = os.environ.get("DB_USER")
+    password = os.environ.get("DB_PASS")
+
     parser = argparse.ArgumentParser(description="Export data from MariaDB to SHP and GeoJSON.")
-    parser.add_argument("--hostname", required=True, help="Hostname of the MariaDB server.")
-    parser.add_argument("--database", required=True, help="Database name.")
-    parser.add_argument("--username", required=True, help="Username for the database.")
-    parser.add_argument("--password", required=True, help="Password for the database.")
-    parser.add_argument("--sql", required=True, help="SQL query to execute.")
-    parser.add_argument("--shp_output", required=True, help="Path to output the SHP file.")
-    parser.add_argument("--geojson_output", required=True, help="Path to output the GeoJSON file.")
+    parser.add_argument(
+        "--hostname", required=True if hostname is None else False, default=hostname, help="Hostname of the MariaDB server.")
+    parser.add_argument(
+        "--database", required=True if database is None else False, default=database, help="Database name.")
+    parser.add_argument(
+        "--username", required=True if username is None else False, default=username, help="Username for the database.")
+    parser.add_argument(
+        "--password", required=True if password is None else False, default=password, help="Password for the database.")
+    parser.add_argument(
+        "--sql", required=True, help="SQL query to execute.")
+    parser.add_argument(
+        "--shp_output", required=True, help="Path to output the SHP file.")
+    parser.add_argument(
+        "--geojson_output", required=True, help="Path to output the GeoJSON file.")
 
     args = parser.parse_args()
 
