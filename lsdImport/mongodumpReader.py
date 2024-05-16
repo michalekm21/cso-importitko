@@ -79,7 +79,7 @@ class LSDMongoZipLocReader:
 
     def create_line(self, path):
         if path is None:
-            self.logger.warning('Path není zadán')
+            self.logger.warning('Path není zadáno')
             return
 
         line = ogr.Geometry(ogr.wkbLineString)

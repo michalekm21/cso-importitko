@@ -1,7 +1,6 @@
 #!/bin/env python3
 import yaml
 import argparse
-import sqlite3
 
 
 def load_config(path):
