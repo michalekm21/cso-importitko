@@ -48,7 +48,7 @@ class DatabaseToShapefile:
             driver.DeleteDataSource(output_path)
 
         out_ds = driver.CreateDataSource(output_path)
-        out_layer = out_ds.CopyLayer(layer, layer.GetName())
+        # out_layer = out_ds.CopyLayer(layer, layer.GetName())
 
         del out_ds  # Finish and save data
         self.logger.info(f"Data exported to SHP: {output_path}")
@@ -60,7 +60,7 @@ class DatabaseToShapefile:
             os.remove(output_path)
 
         out_ds = driver.CreateDataSource(output_path)
-        out_layer = out_ds.CopyLayer(layer, layer.GetName())
+        # out_layer = out_ds.CopyLayer(layer, layer.GetName())
 
         del out_ds  # Finish and save data
         self.logger.info(f"Data exported to GeoJSON: {output_path}")
@@ -72,29 +72,36 @@ def setup_logging():
     logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     return logger
 
 
 def main():
+    """main function"""
     load_dotenv(".env")
     hostname = os.environ.get("DB_HOST")
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
 
-    parser = argparse.ArgumentParser(description="Export data from MariaDB to SHP and GeoJSON.")
+    parser = argparse.ArgumentParser(
+        description="Export data from MariaDB to SHP and GeoJSON.")
     group = parser.add_mutually_exclusive_group()
     parser.add_argument(
-        "--hostname", required=True if hostname is None else False, default=hostname, help="Hostname of the MariaDB server.")
+        "--hostname", required=True if hostname is None else False,
+        default=hostname, help="Hostname of the MariaDB server.")
     parser.add_argument(
-        "--database", required=True if database is None else False, default=database, help="Database name.")
+        "--database", required=True if database is None else False,
+        default=database, help="Database name.")
     parser.add_argument(
-        "--username", required=True if username is None else False, default=username, help="Username for the database.")
+        "--username", required=True if username is None else False,
+        default=username, help="Username for the database.")
     parser.add_argument(
-        "--password", required=True if password is None else False, default=password, help="Password for the database.")
+        "--password", required=True if password is None else False,
+        default=password, help="Password for the database.")
     parser.add_argument(
         "--sql", required=True, help="SQL query to execute.")
     group.add_argument(
