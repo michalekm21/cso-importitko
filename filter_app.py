@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-from lsdImport.mongodump_reader import LSDMongoZipLocReader
+"""Filter """
+
 import argparse
+from lsdImport.mongodump_reader import LSDMongoZipLocReader
 
 
 def get_cmdline_args():
+    """Adds args"""
     parser = argparse.ArgumentParser(
         description='Vyfiltruje ze zazipovaného json dumpu '
         + 'vybrané záznamy do csv')
@@ -19,6 +22,7 @@ def get_cmdline_args():
 
 
 def main():
+    """Main"""
     args = get_cmdline_args()
 
     rdr = LSDMongoZipLocReader(args.filename)

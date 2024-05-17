@@ -1,4 +1,6 @@
 #!/bin/env python3
+"""Export from mysql module"""
+
 import argparse
 import os
 import logging

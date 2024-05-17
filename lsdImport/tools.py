@@ -1,3 +1,6 @@
+#!/bin/env python3
+"""Logging module"""
+
 import logging
 
 

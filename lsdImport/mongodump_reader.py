@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
+"""Reads mongo dump from zip"""
+
 import json
 import zipfile
 # import os
-from osgeo import ogr
 # import logging
-from lsdImport.tools import LoggerConfig
 from csv import DictWriter
 from datetime import datetime
 from inspect import getsource
+from lsdImport.tools import LoggerConfig
+from osgeo import ogr
 
 
 class LSDMongoZipLocReader:
