@@ -1,12 +1,13 @@
 #!/bin/env python3
 import argparse
 import os
+import logging
 from osgeo import ogr
 from dotenv import load_dotenv
-import logging
 
 
 class DatabaseToShapefile:
+    """Convert data from Database"""
     def __init__(self, hostname, database, username, password, logger):
         self.hostname = hostname
         self.database = database
@@ -78,13 +79,14 @@ def setup_logging():
 
 
 def main():
-    env = load_dotenv(".env")
+    load_dotenv(".env")
     hostname = os.environ.get("DB_HOST")
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
 
     parser = argparse.ArgumentParser(description="Export data from MariaDB to SHP and GeoJSON.")
+    group = parser.add_mutually_exclusive_group()
     parser.add_argument(
         "--hostname", required=True if hostname is None else False, default=hostname, help="Hostname of the MariaDB server.")
     parser.add_argument(
@@ -95,10 +97,10 @@ def main():
         "--password", required=True if password is None else False, default=password, help="Password for the database.")
     parser.add_argument(
         "--sql", required=True, help="SQL query to execute.")
-    parser.add_argument(
-        "--shp_output", required=True, help="Path to output the SHP file.")
-    parser.add_argument(
-        "--geojson_output", required=True, help="Path to output the GeoJSON file.")
+    group.add_argument(
+        "--shp_output", help="Path to output the SHP file.")
+    group.add_argument(
+        "--geojson_output", help="Path to output the GeoJSON file.")
 
     args = parser.parse_args()
 
@@ -107,11 +109,14 @@ def main():
     db_to_shp = DatabaseToShapefile(
         args.hostname, args.database, args.username, args.password, logger
     )
+    
     try:
         db_to_shp.connect()
         data_layer = db_to_shp.download_data(args.sql)
-        db_to_shp.export_to_shapefile(data_layer, args.shp_output)
-        db_to_shp.export_to_geojson(data_layer, args.geojson_output)
+        if args.shp_output is not None:
+            db_to_shp.export_to_shapefile(data_layer, args.shp_output)
+        if args.geojson_output is not None:
+            db_to_shp.export_to_geojson(data_layer, args.geojson_output)
     except Exception as e:
         logger.error(e)
 
