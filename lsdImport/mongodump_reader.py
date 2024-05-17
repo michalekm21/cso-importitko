@@ -11,6 +11,7 @@ from inspect import getsource
 
 
 class LSDMongoZipLocReader:
+    """Read zip dump from mongo db"""
     fields = ['_id',
               'key',
               'name',
@@ -39,7 +40,7 @@ class LSDMongoZipLocReader:
         self.load_data()
 
     def load_data(self, file='localities.json'):
-        # Open zip file and extract json files
+        """Open zip file and extract json files"""
         archive = zipfile.ZipFile(self.zip_path)
         for r in archive.open(file):
             self.data.append(
@@ -49,6 +50,7 @@ class LSDMongoZipLocReader:
         # self.data[filename] = pd.DataFrame(self.data[filename])
 
     def format_record(self, record):
+        """Format record"""
         geom_p = None
         x = (record.get('latitude') or record.get('circleLat'))
         y = (record.get('longitude') or record.get('circleLon'))
@@ -78,6 +80,7 @@ class LSDMongoZipLocReader:
         }
 
     def create_line(self, path):
+        """Creates line"""
         if path is None:
             self.logger.warning('Path není zadáno')
             return
@@ -93,10 +96,12 @@ class LSDMongoZipLocReader:
         return line.ExportToWkt()
 
     def filter_data(self, filter_function):
+        """Filtr"""
         return filter(filter_function, self.data)
 
     def save_data_csv(self, filename, filter_function=None):
-        with open(filename, 'w', newline='') as csvfile:
+        """Save to CSV"""
+        with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
             writer = DictWriter(csvfile, fieldnames=self.fields)
             writer.writeheader()
             if filter_function is None:
@@ -107,11 +112,10 @@ class LSDMongoZipLocReader:
                         writer.writerow(r)
                 except KeyError:
                     self.logger.exception(
-                        "jeden z klíčů použitých ve funkci "
-                        + f"{getsource(filter_function)} chybí")
+                        "jeden z klíčů použitých ve funkci %s chybí",
+                        getsource(filter_function))
                 except BaseException:
                     self.logger.exception(
-                        f"filtrovací funkce {getsource(filter_function)} "
-                        + "selhala")
-
+                        "filtrovací funkce %s selhala",
+                        getsource(filter_function))
         return

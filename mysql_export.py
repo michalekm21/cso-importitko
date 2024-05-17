@@ -116,7 +116,6 @@ def main():
     db_to_shp = DatabaseToShapefile(
         args.hostname, args.database, args.username, args.password, logger
     )
-    
     try:
         db_to_shp.connect()
         data_layer = db_to_shp.download_data(args.sql)

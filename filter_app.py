@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from lsdImport.mongodumpReader import LSDMongoZipLocReader
+from lsdImport.mongodump_reader import LSDMongoZipLocReader
 import argparse
 
 
