@@ -43,15 +43,6 @@ def main():
     query = build_query(config, args)
     print(f"Generated Query: {query}")
 
-    # # Connect to a SQLite database (as an example)
-    # conn = sqlite3.connect('example.db')
-    # cursor = conn.cursor()
-    # cursor.execute(query)
-    # results = cursor.fetchall()
-    # for row in results:
-    #     print(row)
-    # conn.close()
-
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 #!/bin/env python3
-"""Export from mysql module"""
+"""Export from mysql"""
 
 import argparse
 import os
@@ -50,9 +50,10 @@ class DatabaseToShapefile:
             driver.DeleteDataSource(output_path)
 
         out_ds = driver.CreateDataSource(output_path)
-        # out_layer = out_ds.CopyLayer(layer, layer.GetName())
+        out_layer = out_ds.CopyLayer(layer, layer.GetName())
 
         del out_ds  # Finish and save data
+        del out_layer
         self.logger.info(f"Data exported to SHP: {output_path}")
 
     def export_to_geojson(self, layer, output_path):
@@ -62,9 +63,10 @@ class DatabaseToShapefile:
             os.remove(output_path)
 
         out_ds = driver.CreateDataSource(output_path)
-        # out_layer = out_ds.CopyLayer(layer, layer.GetName())
+        out_layer = out_ds.CopyLayer(layer, layer.GetName())
 
         del out_ds  # Finish and save data
+        del out_layer
         self.logger.info(f"Data exported to GeoJSON: {output_path}")
 
 
@@ -91,7 +93,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         description="Export data from MariaDB to SHP and GeoJSON.")
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument(
         "--hostname", required=True if hostname is None else False,
         default=hostname, help="Hostname of the MariaDB server.")
@@ -121,6 +123,7 @@ def main():
     try:
         db_to_shp.connect()
         data_layer = db_to_shp.download_data(args.sql)
+        print(data_layer)
         if args.shp_output is not None:
             db_to_shp.export_to_shapefile(data_layer, args.shp_output)
         if args.geojson_output is not None:

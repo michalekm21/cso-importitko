@@ -1,5 +1,5 @@
 #!/bin/env python3
-"""Logging module"""
+"""Tools module"""
 
 import logging
 
