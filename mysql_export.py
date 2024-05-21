@@ -4,6 +4,7 @@
 import argparse
 import os
 import logging
+from query_app import GenerateQuery
 from osgeo import ogr
 from dotenv import load_dotenv
 
@@ -85,11 +86,16 @@ def setup_logging():
 
 def main():
     """main function"""
+    logger = setup_logging()
+
     load_dotenv(".env")
     hostname = os.environ.get("DB_HOST")
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
+
+    query_app = GenerateQuery(logger)
+    query_config = query_app.load_config('query_config.yaml')
 
     parser = argparse.ArgumentParser(
         description="Export data from MariaDB to SHP and GeoJSON.")
@@ -107,22 +113,25 @@ def main():
         "--password", required=True if password is None else False,
         default=password, help="Password for the database.")
     parser.add_argument(
-        "--sql", required=True, help="SQL query to execute.")
+        "--sql", required=False, help="SQL query to execute.")
     group.add_argument(
         "--shp_output", help="Path to output the SHP file.")
     group.add_argument(
         "--geojson_output", help="Path to output the GeoJSON file.")
 
-    args = parser.parse_args()
+    parser = query_app.add_to_parser(query_config, parser)
 
-    logger = setup_logging()
+    args = parser.parse_args()
 
     db_to_shp = DatabaseToShapefile(
         args.hostname, args.database, args.username, args.password, logger
     )
+
+    query = args.sql if args.sql is not None else query_app.build_query(
+        query_config, args)
     try:
         db_to_shp.connect()
-        data_layer = db_to_shp.download_data(args.sql)
+        data_layer = db_to_shp.download_data(query)
         print(data_layer)
         if args.shp_output is not None:
             db_to_shp.export_to_shapefile(data_layer, args.shp_output)
