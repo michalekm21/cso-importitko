@@ -7,24 +7,24 @@ SELECT   Id
 	,MunicipalityPart_ID KODCOBE
 	,Latitude
 	,Longitude
-	,null PrecisionScale
+--	,null PrecisionScale
 	,SiteNote
-	,null SiteSecret
+--	,null SiteSecret
 	,SecrecyLevel_ID SiteSecretLevel
-	,null AllSecret
+--	,null AllSecret
 	,SecretUntil
 	,OtherObservers CoObservers
 	,Note
-	,null Complete
-	,null Closed
-	,null ObsOwner
-	,null RecOwner
+--	,null Complete
+--	,null Closed
+	,Observer ObsOwner
+--	,null RecOwner
 	,UpdatedBy_User_ID LastUpdBy
 	,Created DateCr
 	,Updated DateUpd
-	,null DateClosed
-	,null DateDeleted
-	,null ySquareX
-	,null ySquareY
+--	,null DateClosed
+--	,null DateDeleted
+--	,null ySquareX
+--	,null ySquareY
 FROM avif.List
 JSON_CONTAINS(data, '2', '$');

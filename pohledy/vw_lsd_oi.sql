@@ -10,16 +10,16 @@ SELECT   i.id id
 	,i.Age_ID Age
 	,i.Sex_ID Sex
 	,i.Activity_ID Activity
-	,null OtherActivity
+--	,null OtherActivity
 	,i.ringmark MarkNo
-	,null MyFirstYear
+--	,null MyFirstYear
 	,i.Note Note
 	,m.id PhotoId
 	,i.TagRemarkable IsInteresting
 	,i.rarity yIsRare
 	,i.commentscount yCommentCount
 	,i.lastcommented yLastCommentAdded
-	,null RecOwner
+--	,null RecOwner
 	,i.UpdatedBy_User_ID LastUpdBy
 	,i.Created DateCr, i.Updated DateUpd
 	,i.Group `Group`
