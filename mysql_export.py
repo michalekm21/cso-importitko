@@ -93,31 +93,33 @@ def main():
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
+    query = os.environ.get("DB_QUERY")
 
-    #query_app = GenerateQuery(logger)
-    #query_config = query_app.load_config('query_config.yaml')
+    # query_app = GenerateQuery(logger)
+    # query_config = query_app.load_config('query_config.yaml')
 
     parser = argparse.ArgumentParser(
         description="Export data from MariaDB to SHP and GeoJSON.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument(
-        "--hostname", required=True if hostname is None else False,
-        default=hostname, help="Hostname of the MariaDB server.")
-    parser.add_argument(
-        "--database", required=True if database is None else False,
-        default=database, help="Database name.")
-    parser.add_argument(
-        "--username", required=True if username is None else False,
-        default=username, help="Username for the database.")
-    parser.add_argument(
-        "--password", required=True if password is None else False,
-        default=password, help="Password for the database.")
-    parser.add_argument(
-        "--sql", required=True, help="SQL query to execute.")
-    group.add_argument(
-        "--shp_output", help="Path to output the SHP file.")
-    group.add_argument(
-        "--geojson_output", help="Path to output the GeoJSON file.")
+    # group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument("--hostname",
+                        required=True if hostname is None else False,
+                        default=hostname, help="Hostname of the MariaDB server.")
+    parser.add_argument("--database",
+                        required=True if database is None else False,
+                        default=database, help="Database name.")
+    parser.add_argument("--username",
+                        required=True if username is None else False,
+                        default=username, help="Username for the database.")
+    parser.add_argument("--password",
+                        required=True if password is None else False,
+                        default=password, help="Password for the database.")
+    parser.add_argument("--sql",
+                        required=True if query is None else False, 
+                        default=query, help="SQL query to execute.")
+    parser.add_argument("--output", "-o",
+                        required=True, help="Path to output the SHP file.")
+    # group.add_argument(
+    #     "--geojson_output", help="Path to output the GeoJSON file.")
 
     # parser = query_app.add_to_parser(query_config, parser)
 
