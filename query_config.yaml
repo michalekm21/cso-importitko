@@ -1,4 +1,4 @@
-query_template: "SELECT * FROM users WHERE {conditions}"
+query_template: "SELECT * FROM project.LSD_Square WHERE {conditions}"
 parameters:
   - name: "username"
     type: "str"
