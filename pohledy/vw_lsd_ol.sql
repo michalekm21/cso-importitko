@@ -17,7 +17,7 @@ SELECT   Id
 	,Note
 --	,null Complete
 --	,null Closed
-	,Observer ObsOwner
+	,Author_User_ID ObsOwner
 --	,null RecOwner
 	,UpdatedBy_User_ID LastUpdBy
 	,Created DateCr
@@ -27,4 +27,4 @@ SELECT   Id
 --	,null ySquareX
 --	,null ySquareY
 FROM avif.List
-WHERE JSON_CONTAINS(data, '2', '$');
+WHERE JSON_CONTAINS(Projects, '2', '$');
