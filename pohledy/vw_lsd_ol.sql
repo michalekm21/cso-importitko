@@ -1,4 +1,4 @@
-CREATE VIEW vw_lsd_ol AS
+ALTER VIEW vw_lsd_ol AS
 SELECT   Id
 	,`Date` ObsDate
 	,TimeStart
@@ -26,5 +26,7 @@ SELECT   Id
 --	,null DateDeleted
 --	,null ySquareX
 --	,null ySquareY
-FROM avif.List
+	,Observer
+    ,ObserversEmail
+FROM avif.List LEFT JOIN avif.View_LSD_Users ON Author_User_ID = ObserverID
 WHERE JSON_CONTAINS(Projects, '2', '$');
