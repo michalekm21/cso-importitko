@@ -1,6 +1,8 @@
+import os
 import ogr
 import osr
 import logging
+from dotenv import load_dotenv
 
 
 class GeometryDistanceCalculator:
@@ -81,12 +83,18 @@ class GeometryDistanceCalculator:
 
 # Použití třídy
 if __name__ == "__main__":
+    load_dotenv(".env")
+    hostname = os.environ.get("DB_HOST")
+    database = os.environ.get("DB_NAME")
+    username = os.environ.get("DB_USER")
+    password = os.environ.get("DB_PASS")
+
     calculator = GeometryDistanceCalculator(
-        dbname='my_database',
-        host='my_host',
-        user='my_user',
-        password='my_password',
-        table='my_table'
+        dbname='michalek',
+        host=hostname,
+        user=username,
+        password=password,
+        table='vw_lsd_oi'
     )
 
     try:
