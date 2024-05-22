@@ -27,4 +27,4 @@ SELECT   Id
 --	,null ySquareX
 --	,null ySquareY
 FROM avif.List
-JSON_CONTAINS(data, '2', '$');
+WHERE JSON_CONTAINS(data, '2', '$');
