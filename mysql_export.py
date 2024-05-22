@@ -134,8 +134,8 @@ if __name__ == "__main__":
         db_to_shp.connect()
         data_layer = db_to_shp.download_data(args.sql)
         print(data_layer)
-        if args.shp_output is not None:
-            db_to_shp.export_to_shapefile(data_layer, args.shp_output)
+        if args.output is not None:
+            db_to_shp.export_to_shapefile(data_layer, args.output)
         if args.geojson_output is not None:
             db_to_shp.export_to_geojson(data_layer, args.geojson_output)
     except Exception as e:

@@ -1,14 +1,17 @@
+#!/bin/env python3
+
 import os
-import ogr
-import osr
+from osgeo import osr, ogr
 import logging
 from dotenv import load_dotenv
 
 
 class GeometryDistanceCalculator:
     def __init__(self, dbname, host, user, password, table):
-        self.dsn = (f'MYSQL:dbname={dbname},host={host},'
-                    f'user={user},password={password}')
+        self.dsn = (
+            f"MYSQL:{dbname},host={host},user={user},"
+            f"password={password},port=3306"
+        )
         self.table = table
         self.ds = None
         self.layer = None
@@ -45,7 +48,7 @@ class GeometryDistanceCalculator:
 
     def fetch_data(self):
         try:
-            sql = f"SELECT geom_l, geom_p FROM {self.table}"
+            sql = f"SELECT Path1Geometry, Path2Geometry FROM {self.table}"
             self.layer = self.ds.ExecuteSQL(sql)
             self.logger.info("Data načtena z databáze.")
         except Exception as e:
@@ -55,8 +58,8 @@ class GeometryDistanceCalculator:
     def calculate_distance(self):
         try:
             for feature in self.layer:
-                geom_l = feature.GetGeometryRef("geom_l")
-                geom_p = feature.GetGeometryRef("geom_p")
+                geom_l = feature.GetGeomFieldRef(0)
+                geom_p = feature.GetGeomFieldRef(1)
 
                 # Transformace geometrií
                 geom_l.Transform(self.transform)
@@ -88,13 +91,14 @@ if __name__ == "__main__":
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
-
+    
     calculator = GeometryDistanceCalculator(
         dbname='michalek',
         host=hostname,
         user=username,
         password=password,
-        table='vw_lsd_oi'
+        # table='vw_lsd_oi oi LEFT JOIN vw_lsd_ol ol ON oi.ObsListId = Id'
+        table='project.LSD_Square'
     )
 
     try:
