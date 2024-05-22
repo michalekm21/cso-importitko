@@ -1,0 +1,4 @@
+rok
+čtverec - regex
+uživatel - +pohled
+druh
