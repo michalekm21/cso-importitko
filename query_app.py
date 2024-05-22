@@ -10,10 +10,11 @@ class GenerateQuery:
     """Generate query based on YAML config"""
     def __init__(self, logger):
         self.logger = logger
+        self.parser = None
 
     def load_config(self, path):
         """Gets Config from YAML"""
-        with open(path, 'r') as file:
+        with open(path, 'r', encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     def create_parser(self, config):
@@ -22,7 +23,8 @@ class GenerateQuery:
             description='Run a SQL query based on provided parameters.')
         for param in config['parameters']:
             self.parser.add_argument(
-                f"--{param['name']}", type=eval(param['type']), help=param['help'])
+                f"--{param['name']}", type=eval(param['type']),
+                help=param['help'])
         return self.parser
 
     def add_to_parser(self, config, parser):
@@ -30,7 +32,8 @@ class GenerateQuery:
         for param in config['parameters']:
             try:
                 parser.add_argument(
-                    f"--{param['name']}", type=eval(param['type']), help=param['help'])
+                    f"--{param['name']}", type=eval(param['type']),
+                    help=param['help'])
             except Exception as e:
                 self.logger.error(e)
 
