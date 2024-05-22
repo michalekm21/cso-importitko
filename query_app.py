@@ -66,8 +66,7 @@ def setup_logging():
     return logger
 
 
-def main():
-    """main"""
+if __name__ == "__main__":
     logger = setup_logging()
     generate_query = GenerateQuery(logger)
     config = generate_query.load_config('query_config.yaml')
@@ -75,7 +74,3 @@ def main():
     args = generate_query.parser.parse_args()
     query = generate_query.build_query(config, args)
     print(f"Generated Query: {query}")
-
-
-if __name__ == "__main__":
-    main()

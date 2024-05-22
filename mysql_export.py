@@ -84,8 +84,7 @@ def setup_logging():
     return logger
 
 
-def main():
-    """main function"""
+if __name__ == "__main__":
     logger = setup_logging()
 
     load_dotenv(".env")
@@ -141,7 +140,4 @@ def main():
             db_to_shp.export_to_geojson(data_layer, args.geojson_output)
     except Exception as e:
         logger.error(e)
-
-
-if __name__ == "__main__":
-    main()
+        
