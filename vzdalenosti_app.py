@@ -59,8 +59,20 @@ class GeometryDistanceCalculator:
             raise
 
     def calculate_distance(self):
+        output_path = "vzdalenosti.shp"
+        
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        if os.path.exists(output_path):
+            driver.DeleteDataSource(output_path)
+
+        out_ds = driver.CreateDataSource(output_path)
+        out_layer = out_ds.CopyLayer(self.layer, self.layer.GetName())
+        out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
+        out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
+        out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
+
         try:
-            for feature in self.layer:
+            for feature in out_layer:
                 # Transformace geometrií
                 geom_l = feature.GetGeomFieldRef(0)
                 
@@ -79,7 +91,13 @@ class GeometryDistanceCalculator:
                 # Výpočet vzdálenosti mezi linií a bodem
                 obs2line = geom_l.Distance(geom_obs)
                 item2line = geom_l.Distance(geom_item)
-                obs2item =  geom_l.Distance(geom_obs)
+                obs2item = geom_item.Distance(geom_obs)
+ 
+                feature.SetField('obs2line', obs2line)
+                feature.SetField('item2line', item2line)
+                feature.SetField('obs2item', obs2item)
+                
+                out_layer.SetFeature(feature)
                 
                 self.logger.info(
                     "Vzdálenost mezi obs a line: %s metrů", obs2line)
@@ -87,6 +105,24 @@ class GeometryDistanceCalculator:
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
+        
+        del out_ds  # Finish and save data
+        del out_layer
+
+    def export_to_shapefile(self):
+        """Export data to SHP file."""
+        output_path = "vzdalenosti.shp"
+        
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        if os.path.exists(output_path):
+            driver.DeleteDataSource(output_path)
+
+        out_ds = driver.CreateDataSource(output_path)
+        out_layer = out_ds.CopyLayer(self.layer, self.layer.GetName())
+
+        del out_ds  # Finish and save data
+        del out_layer
+        self.logger.info(f"Data exported to SHP: {output_path}")
 
     def release(self):
         try:
