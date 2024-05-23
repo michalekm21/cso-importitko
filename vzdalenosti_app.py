@@ -23,10 +23,13 @@ class GeometryDistanceCalculator:
 
         # Definice transformace na SRID 5514
         self.source_srs = osr.SpatialReference()
+        # Prohozené souřadnice
+        self.source_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
         # Předpokládáme, že původní souřadnice jsou ve WGS84
         self.source_srs.ImportFromEPSG(4326)
 
         self.target_srs = osr.SpatialReference()
+        
         self.target_srs.ImportFromProj4(
             "+proj=krovak +lat_0=49.5 +lon_0=24.8333333333333 "
             "+alpha=30.2881397527778 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel "
