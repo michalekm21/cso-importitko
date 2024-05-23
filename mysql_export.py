@@ -4,7 +4,7 @@
 import argparse
 import os
 import logging
-from query_app import GenerateQuery
+# from query_app import GenerateQuery
 from osgeo import ogr
 from dotenv import load_dotenv
 

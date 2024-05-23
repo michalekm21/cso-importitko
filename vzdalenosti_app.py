@@ -7,12 +7,11 @@ from dotenv import load_dotenv
 
 
 class GeometryDistanceCalculator:
-    def __init__(self, dbname, host, user, password, table):
+    def __init__(self, database, hostname, username, password):
         self.dsn = (
-            f"MYSQL:{dbname},host={host},user={user},"
+            f"MYSQL:{database},host={hostname},user={username},"
             f"password={password},port=3306"
         )
-        self.table = table
         self.ds = None
         self.layer = None
        
@@ -50,11 +49,11 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při připojování k databázi: %s", e)
             raise
 
-    def fetch_data(self):
+    def fetch_data(self, sql):
         try:
-            sql = f"SELECT Path1Geometry, Path2Geometry FROM {self.table}"
             self.layer = self.ds.ExecuteSQL(sql)
             self.logger.info("Data načtena z databáze.")
+            return self.layer
         except Exception as e:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
@@ -62,17 +61,28 @@ class GeometryDistanceCalculator:
     def calculate_distance(self):
         try:
             for feature in self.layer:
-                geom_l = feature.GetGeomFieldRef(0)
-                geom_p = feature.GetGeomFieldRef(1)
-
                 # Transformace geometrií
+                geom_l = feature.GetGeomFieldRef(0)
+                
+                geom_obs = ogr.Geometry(ogr.wkbPoint)
+                geom_obs.AddPoint(feature.GetField("LonObs"),
+                                  feature.GetField("LatObs"))
+            
+                geom_item = ogr.Geometry(ogr.wkbPoint)
+                geom_item.AddPoint(feature.GetField("LonObs"),
+                                   feature.GetField("LatObs"))
+                
                 geom_l.Transform(self.transform)
-                geom_p.Transform(self.transform)
+                geom_obs.Transform(self.transform)
+                geom_item.Transform(self.transform)
 
                 # Výpočet vzdálenosti mezi linií a bodem
-                distance = geom_l.Distance(geom_p)
+                obs_distance = geom_l.Distance(geom_obs)
+                
                 self.logger.info(
                     "Vzdálenost mezi linií a bodem: %s metrů", distance)
+                
+                return distance
 
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
@@ -95,19 +105,14 @@ if __name__ == "__main__":
     database = os.environ.get("DB_NAME")
     username = os.environ.get("DB_USER")
     password = os.environ.get("DB_PASS")
+    query = os.environ.get("DB_QUERY")
     
     calculator = GeometryDistanceCalculator(
-        dbname='michalek',
-        host=hostname,
-        user=username,
-        password=password,
-        # table='vw_lsd_oi oi LEFT JOIN vw_lsd_ol ol ON oi.ObsListId = Id'
-        table='project.LSD_Square'
-    )
+        'michalek', hostname, username, password)
 
     try:
         calculator.connect()
-        calculator.fetch_data()
+        calculator.fetch_data(query)
         calculator.calculate_distance()
     finally:
         calculator.release()

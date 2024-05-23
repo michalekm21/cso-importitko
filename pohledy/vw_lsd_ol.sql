@@ -27,6 +27,6 @@ SELECT   Id
 --	,null ySquareX
 --	,null ySquareY
 	,Observer
-    ,ObserversEmail
+    	,ObserversEmail
 FROM avif.List LEFT JOIN avif.View_LSD_Users ON Author_User_ID = ObserverID
 WHERE JSON_CONTAINS(Projects, '2', '$');
