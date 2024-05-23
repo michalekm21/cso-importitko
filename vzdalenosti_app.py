@@ -77,13 +77,13 @@ class GeometryDistanceCalculator:
                 geom_item.Transform(self.transform)
 
                 # Výpočet vzdálenosti mezi linií a bodem
-                obs_distance = geom_l.Distance(geom_obs)
+                obs2line = geom_l.Distance(geom_obs)
+                item2line = geom_l.Distance(geom_item)
+                obs2item =  geom_l.Distance(geom_obs)
                 
                 self.logger.info(
-                    "Vzdálenost mezi linií a bodem: %s metrů", distance)
+                    "Vzdálenost mezi obs a line: %s metrů", obs2line)
                 
-                return distance
-
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
