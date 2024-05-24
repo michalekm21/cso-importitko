@@ -120,6 +120,7 @@ class GeometryDistanceCalculator:
                 # Získání geometrií
                 geom_l = feature.GetGeomFieldRef(0)
                 if geom_l is None:
+                    # print(feature.GetField("kfme"))
                     continue    # !!přeskočit pokud schází geometrie linie
 
                 # obs
@@ -249,6 +250,8 @@ def main():
                         help="Filter by date - either Year or YYYY-MM-DD")
     parser.add_argument("--species",
                         help="Filter by species name - either latin or czech")
+    parser.add_argument("--square",
+                        help="Filter by KFME id - accepts regex")
     # group.add_argument("--geojson_output", "-geojs",
     #                    help="Path to output the GeoJSON file.")
 
@@ -260,7 +263,7 @@ def main():
     try:
         calculator.connect()
         calculator.fetch_data(
-            build_query(conf_query, args.min_date, args.species, 500))
+            build_query(conf_query, args.min_date, args.species))
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
         # if args.geojson_output is not None:
