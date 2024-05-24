@@ -2,11 +2,13 @@
 """Aplikace pro výpočet vzdálenosti pro LSD"""
 
 import os
+import warnings
 import logging
 import argparse
 import yaml
 from osgeo import osr, ogr
 from dotenv import load_dotenv
+from halo import Halo
 
 os.environ['SHAPE_ENCODING'] = "utf-8"
 osr.UseExceptions()
@@ -29,7 +31,7 @@ class GeometryDistanceCalculator:
         self.driver_name = None
 
         # Nastavení logování
-        logging.basicConfig(level=logging.INFO,
+        logging.basicConfig(level=logging.WARNING,
                             format='%(asctime)s - %(levelname)s - %(message)s')
         self.logger = logging.getLogger(__name__)
 
@@ -53,28 +55,40 @@ class GeometryDistanceCalculator:
 
     def connect(self):
         """Připojení k DB"""
+        spinner = Halo(text='Connecting to DB :', spinner='dots')
+        spinner.start()
         try:
-            self.ds = ogr.Open(self.dsn, 0)
-            if not self.ds:
-                self.logger.error("Nelze se připojit k databázi.")
-                raise ConnectionError("Nelze se připojit k databázi.")
-            self.logger.info("Připojeno k databázi.")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.ds = ogr.Open(self.dsn, 0)
+                if not self.ds:
+                    self.logger.error("Nelze se připojit k databázi.")
+                    raise ConnectionError("Nelze se připojit k databázi.")
+                self.logger.info("Připojeno k databázi.")
+                spinner.succeed("DB connected")
         except Exception as e:
+            spinner.fail(f"Failed connecting to DB: {e}")
             self.logger.exception("Chyba při připojování k databázi: %s", e)
             raise
 
     def fetch_data(self, sql):
         """Stahuje data z DB"""
+        spinner = Halo(text='Fetching data', spinner='dots')
+        spinner.start()
         try:
             self.layer = self.ds.ExecuteSQL(sql)
             self.logger.info("Data načtena z databáze.")
+            spinner.succeed("Data downloaded")
             return self.layer
         except Exception as e:
+            spinner.fail(f"Fetching data failed: {e}")
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
     def save_data(self, driver_name, output_path):
         """Ukládá stažená data"""
+        spinner = Halo(text='Saving data', spinner='dots')
+        spinner.start()
         self.driver_name = driver_name
         self.output_path = output_path
         try:
@@ -85,7 +99,9 @@ class GeometryDistanceCalculator:
             self.out_ds = driver.CreateDataSource(self.output_path)
             self.out_layer = self.out_ds.CopyLayer(
                 self.layer, self.layer.GetName())
+            spinner.succeed("Data saved")
         except Exception as e:
+            spinner.fail(f"Failed saving the data to disk: {e}")
             self.logger.exception("Chyba při ukládání ustažených dat: %s", e)
             raise
         finally:
@@ -93,6 +109,8 @@ class GeometryDistanceCalculator:
 
     def calculate_distance(self):
         """ Počítá vzdálenost ze stažených dat"""
+        spinner = Halo(text='Calculating the distances', spinner='dots')
+        spinner.start()
         self.out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
         self.out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
         self.out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
@@ -133,21 +151,28 @@ class GeometryDistanceCalculator:
                 #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
 
         except Exception as e:
+            spinner.fail(f"Failde calculating the distances: {e}")
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
 
+        spinner.succeed("Distances calculated")
         del self.out_ds  # Finish and save data
         del self.out_layer
         self.logger.info(
             "Data exported to %s : %s ", self.driver_name, self.output_path)
+        spinner.succeed(f"Data exported to {self.driver_name}")
 
     def release(self):
         """Uvolnit připojení k DB"""
+        spinner = Halo(text='Releasing the DB connection', spinner='dots')
+        spinner.start()
         try:
             if self.layer:
                 self.ds.ReleaseResultSet(self.layer)
                 self.logger.info("Připojení k databázi bylo uzavřeno.")
+                spinner.succeed("DB connection released")
         except Exception as e:
+            spinner.fail(f"Failed releasing the connection: {e}")
             self.logger.exception("Chyba při uvolňování zdrojů: %s", e)
             raise
 
