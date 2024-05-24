@@ -1,8 +1,9 @@
 #!/bin/env python3
+"""Aplikace pro výpočet vzdálenosti pro LSD"""
 
 import os
-from osgeo import osr, ogr
 import logging
+from osgeo import osr, ogr
 from dotenv import load_dotenv
 
 
@@ -15,10 +16,10 @@ class GeometryDistanceCalculator:
         )
         self.ds = None
         self.layer = None
-        
+
         self.out_layer = None
         self.out_ds = None
-        
+
         self.output_path = "vzdalenosti"
         self.driver_name = 'GeoJSON'
 
@@ -35,7 +36,7 @@ class GeometryDistanceCalculator:
         self.source_srs.ImportFromEPSG(4326)
 
         self.target_srs = osr.SpatialReference()
-        
+
         self.target_srs.ImportFromProj4(
             "+proj=krovak +lat_0=49.5 +lon_0=24.8333333333333 "
             "+alpha=30.2881397527778 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel "
@@ -46,11 +47,12 @@ class GeometryDistanceCalculator:
             self.source_srs, self.target_srs)
 
     def connect(self):
+        """Připojení k DB"""
         try:
             self.ds = ogr.Open(self.dsn, 0)
             if not self.ds:
                 self.logger.error("Nelze se připojit k databázi.")
-                raise Exception("Nelze se připojit k databázi.")
+                raise ConnectionError("Nelze se připojit k databázi.")
             self.logger.info("Připojeno k databázi.")
         except Exception as e:
             self.logger.exception("Chyba při připojování k databázi: %s", e)
@@ -65,7 +67,7 @@ class GeometryDistanceCalculator:
         except Exception as e:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
-        
+
     def save_data(self):
         """Ukládá stažená data"""
         try:
@@ -82,7 +84,7 @@ class GeometryDistanceCalculator:
         finally:
             self.release()
 
-    def calculate_distance(self):        
+    def calculate_distance(self):
         """ Počítá vzdálenost ze stažených dat"""
         self.out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
         self.out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
@@ -100,7 +102,7 @@ class GeometryDistanceCalculator:
                 geom_item = ogr.Geometry(ogr.wkbPoint)
                 geom_item.AddPoint(feature.GetField("LonObs"),
                                    feature.GetField("LatObs"))
-                
+
                 # Transformace geometrií
                 geom_l.Transform(self.transform)
                 geom_obs.Transform(self.transform)
@@ -110,26 +112,27 @@ class GeometryDistanceCalculator:
                 obs2line = geom_l.Distance(geom_obs)
                 item2line = geom_l.Distance(geom_item)
                 obs2item = geom_item.Distance(geom_obs)
- 
+
                 feature.SetField('obs2line', obs2line)
                 feature.SetField('item2line', item2line)
                 feature.SetField('obs2item', obs2item)
-                
+
                 self.out_layer.SetFeature(feature)
-                
+
                 # self.logger.info(
                 #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
-                
+
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
-        
+
         del self.out_ds  # Finish and save data
         del self.out_layer
         self.logger.info(
-            f"Data exported to {self.driver_name}: {self.output_path}")
+            "Data exported to %s : %s ", self.driver_name, self.output_path)
 
     def release(self):
+        """Uvolnit připojení k DB"""
         try:
             if self.layer:
                 self.ds.ReleaseResultSet(self.layer)
@@ -142,19 +145,20 @@ class GeometryDistanceCalculator:
 # Použití třídy
 if __name__ == "__main__":
     osr.UseExceptions()
+    # údaje z .env
     load_dotenv(".env")
-    hostname = os.environ.get("DB_HOST")
-    database = os.environ.get("DB_NAME")
-    username = os.environ.get("DB_USER")
-    password = os.environ.get("DB_PASS")
-    query = os.environ.get("DB_QUERY")
-    
+    env_hostname = os.environ.get("DB_HOST")
+    env_database = os.environ.get("DB_NAME")
+    env_username = os.environ.get("DB_USER")
+    env_password = os.environ.get("DB_PASS")
+    env_query = os.environ.get("DB_QUERY")
+
     calculator = GeometryDistanceCalculator(
-        'michalek', hostname, username, password)
+        'michalek', env_hostname, env_username, env_password)
 
     try:
         calculator.connect()
-        calculator.fetch_data(query)
+        calculator.fetch_data(env_query)
         calculator.save_data()
         calculator.calculate_distance()
     except Exception as ex:
