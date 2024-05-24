@@ -2,6 +2,7 @@
 """Aplikace pro výpočet vzdálenosti pro LSD"""
 
 import os
+import yaml
 import logging
 import argparse
 from osgeo import osr, ogr
@@ -21,8 +22,8 @@ class GeometryDistanceCalculator:
         self.out_layer = None
         self.out_ds = None
 
-        self.output_path = "vzdalenosti"
-        self.driver_name = 'GeoJSON'
+        self.output_path = None
+        self.driver_name = None
 
         # Nastavení logování
         logging.basicConfig(level=logging.INFO,
@@ -69,8 +70,10 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
-    def save_data(self):
+    def save_data(self, driver_name, output_path):
         """Ukládá stažená data"""
+        self.driver_name = driver_name
+        self.output_path = output_path
         try:
             driver = ogr.GetDriverByName(self.driver_name)
             if os.path.exists(self.output_path):
@@ -120,8 +123,8 @@ class GeometryDistanceCalculator:
 
                 self.out_layer.SetFeature(feature)
 
-                # self.logger.info(
-                #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
+                self.logger.info(
+                    "Vzdálenost mezi obs a line: %s metrů", obs2line)
 
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
@@ -146,14 +149,28 @@ class GeometryDistanceCalculator:
 # Použití třídy
 if __name__ == "__main__":
     osr.UseExceptions()
-    # údaje z .env
+    # údaje z .env < config.yaml
     load_dotenv(".env")
-    conf_hostname = os.environ.get("DB_HOST")
-    conf_database = os.environ.get("DB_NAME")
-    conf_username = os.environ.get("DB_USER")
-    conf_password = os.environ.get("DB_PASS")
-    conf_query = os.environ.get("DB_QUERY")
+    with open('config.yaml', 'r', encoding="utf-8") as file:
+        config = yaml.safe_load(file)
 
+    conf_hostname = (
+        config['hostname'] if 'hostname' in config
+        else os.environ.get("DB_HOST"))
+    conf_database = (
+        config['database'] if 'database' in config
+        else os.environ.get("DB_NAME"))
+    conf_username = (
+        config['username'] if 'username' in config
+        else os.environ.get("DB_USER"))
+    conf_password = (
+        config['password'] if 'password' in config
+        else os.environ.get("DB_PASS"))
+    conf_query = (
+        config['query'] if 'query' in config
+        else os.environ.get("DB_QUERY"))
+
+    # Parametry příkazu
     parser = argparse.ArgumentParser(
         description="Export LSD data with distances to SHP and GeoJSON.")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -174,14 +191,12 @@ if __name__ == "__main__":
                         default=conf_password,
                         help="Password for the database.")
     parser.add_argument("--sql",
-                        required=True if conf_query is None else False, 
+                        required=True if conf_query is None else False,
                         default=conf_query, help="SQL query to execute.")
     group.add_argument("--shp_output", "-shp",
                        help="Path to output the SHP file.")
     group.add_argument("--geojson_output", "-geojs",
                        help="Path to output the GeoJSON file.")
-
-    # parser = query_app.add_to_parser(query_config, parser)
 
     args = parser.parse_args()
 
@@ -191,7 +206,10 @@ if __name__ == "__main__":
     try:
         calculator.connect()
         calculator.fetch_data(args.sql)
-        calculator.save_data()
+        if args.shp_output is not None:
+            calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
+        if args.geojson_output is not None:
+            calculator.save_data("GeoJSON", "vzdalenosti.geojson")
         calculator.calculate_distance()
     except Exception as ex:
         calculator.logger.error(ex)
