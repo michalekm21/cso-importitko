@@ -8,6 +8,9 @@ import yaml
 from osgeo import osr, ogr
 from dotenv import load_dotenv
 
+os.environ['SHAPE_ENCODING'] = "utf-8"
+osr.UseExceptions()
+
 
 class GeometryDistanceCalculator:
     """Počítá vzdálenosti z Geometrie"""
@@ -149,7 +152,7 @@ class GeometryDistanceCalculator:
             raise
 
 
-def build_query(query_template, min_date, species_name, limit=None):
+def build_query(query_template, min_date, species_name, limit=50):
     """Sestaví dotaz"""
     where_clause = ""
 
@@ -163,14 +166,14 @@ def build_query(query_template, min_date, species_name, limit=None):
     if min_date is not None:
         clause_conds.append(f"(LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
                             f"(LOWER(NameLA) LIKE LOWER('%{species_name}%'))")
-    where_clause = (" AND ".join(clause_conds) +
-                    ("LIMIT {limit}" if limit is not None else ""))
+    where_clause = " AND ".join(clause_conds) + "LIMIT 50"
 
+    print(query_template.format(conditions=where_clause))
     return query_template.format(conditions=where_clause)
 
 
-if __name__ == "__main__":
-    osr.UseExceptions()
+def main():
+    """main"""
     # údaje z .env < config.yaml
     load_dotenv(".env")
     with open('config.yaml', 'r', encoding="utf-8") as file:
@@ -229,7 +232,7 @@ if __name__ == "__main__":
     try:
         calculator.connect()
         calculator.fetch_data(
-            build_query(conf_query, args.min_date, args.species))
+            build_query(conf_query, args.min_date, args.species, limit=50))
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
         # if args.geojson_output is not None:
@@ -237,3 +240,10 @@ if __name__ == "__main__":
         calculator.calculate_distance()
     except Exception as ex:
         calculator.logger.error(ex)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
