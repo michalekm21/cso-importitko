@@ -3,6 +3,7 @@
 
 import os
 import logging
+import argparse
 from osgeo import osr, ogr
 from dotenv import load_dotenv
 
@@ -147,18 +148,49 @@ if __name__ == "__main__":
     osr.UseExceptions()
     # údaje z .env
     load_dotenv(".env")
-    env_hostname = os.environ.get("DB_HOST")
-    env_database = os.environ.get("DB_NAME")
-    env_username = os.environ.get("DB_USER")
-    env_password = os.environ.get("DB_PASS")
-    env_query = os.environ.get("DB_QUERY")
+    conf_hostname = os.environ.get("DB_HOST")
+    conf_database = os.environ.get("DB_NAME")
+    conf_username = os.environ.get("DB_USER")
+    conf_password = os.environ.get("DB_PASS")
+    conf_query = os.environ.get("DB_QUERY")
+
+    parser = argparse.ArgumentParser(
+        description="Export LSD data with distances to SHP and GeoJSON.")
+    group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument("--hostname",
+                        required=True if conf_hostname is None else False,
+                        default=conf_hostname,
+                        help="Hostname of the MariaDB server.")
+    parser.add_argument("--database",
+                        required=True if conf_database is None else False,
+                        default=conf_database,
+                        help="Database name.")
+    parser.add_argument("--username",
+                        required=True if conf_username is None else False,
+                        default=conf_username,
+                        help="Username for the database.")
+    parser.add_argument("--password",
+                        required=True if conf_password is None else False,
+                        default=conf_password,
+                        help="Password for the database.")
+    parser.add_argument("--sql",
+                        required=True if conf_query is None else False, 
+                        default=conf_query, help="SQL query to execute.")
+    group.add_argument("--shp_output", "-shp",
+                       help="Path to output the SHP file.")
+    group.add_argument("--geojson_output", "-geojs",
+                       help="Path to output the GeoJSON file.")
+
+    # parser = query_app.add_to_parser(query_config, parser)
+
+    args = parser.parse_args()
 
     calculator = GeometryDistanceCalculator(
-        'michalek', env_hostname, env_username, env_password)
+        'michalek', args.hostname, args.username, args.password)
 
     try:
         calculator.connect()
-        calculator.fetch_data(env_query)
+        calculator.fetch_data(args.sql)
         calculator.save_data()
         calculator.calculate_distance()
     except Exception as ex:
