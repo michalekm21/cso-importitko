@@ -98,18 +98,19 @@ class GeometryDistanceCalculator:
             for feature in self.out_layer:
                 # Získání geometrií
                 geom_l = feature.GetGeomFieldRef(0)
+                if geom_l is None:
+                    continue    # !!přeskočit pokud schází geometrie linie
+
                 # obs
                 geom_obs = ogr.Geometry(ogr.wkbPoint)
-                geom_obs.AddPoint(feature.GetField("LonObs"),
-                                  feature.GetField("LatObs"))
+                geom_obs.AddPoint(float(feature.GetField("LonObs")),
+                                  float(feature.GetField("LatObs")))
                 # item
                 geom_item = ogr.Geometry(ogr.wkbPoint)
-                geom_item.AddPoint(feature.GetField("LonItem"),
-                                   feature.GetField("LatItem"))
+                geom_item.AddPoint(float(feature.GetField("LonItem")),
+                                   float(feature.GetField("LatItem")))
 
                 # Transformace geometrií
-                if geom_l is None:
-                    continue    # přeskočit pokud nepatří k linii
                 geom_l.Transform(self.transform)
                 geom_obs.Transform(self.transform)
                 geom_item.Transform(self.transform)
@@ -148,7 +149,7 @@ class GeometryDistanceCalculator:
             raise
 
 
-def build_query(query_template, min_date, species_name):
+def build_query(query_template, min_date, species_name, limit=None):
     """Sestaví dotaz"""
     where_clause = ""
 
@@ -162,7 +163,8 @@ def build_query(query_template, min_date, species_name):
     if min_date is not None:
         clause_conds.append(f"(LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
                             f"(LOWER(NameLA) LIKE LOWER('%{species_name}%'))")
-    where_clause = " AND ".join(clause_conds)
+    where_clause = (" AND ".join(clause_conds) +
+                    ("LIMIT {limit}" if limit is not None else ""))
 
     return query_template.format(conditions=where_clause)
 
