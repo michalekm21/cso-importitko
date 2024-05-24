@@ -148,6 +148,25 @@ class GeometryDistanceCalculator:
             raise
 
 
+def build_query(query_template, min_date, species_name):
+    """Sestaví dotaz"""
+    where_clause = ""
+
+    if not (min_date is not None or species_name is not None):
+        return query_template.format(conditions="")
+
+    where_clause = "WHERE "
+    clause_conds = []
+    if min_date is not None:
+        clause_conds.append(f"ObsDate >= '{min_date}'")
+    if min_date is not None:
+        clause_conds.append(f"(LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
+                            f"(LOWER(NameLA) LIKE LOWER('%{species_name}%'))")
+    where_clause = " AND ".join(clause_conds)
+
+    return query_template.format(conditions=where_clause)
+
+
 if __name__ == "__main__":
     osr.UseExceptions()
     # údaje z .env < config.yaml
@@ -168,7 +187,7 @@ if __name__ == "__main__":
         config['password'] if 'password' in config
         else os.environ.get("DB_PASS"))
     conf_query = (
-        config['query'] if 'query' in config
+        config['query_template'] if 'query_template' in config
         else os.environ.get("DB_QUERY"))
 
     # Parametry příkazu
@@ -195,6 +214,8 @@ if __name__ == "__main__":
                         help="Path to output the SHP file.")
     parser.add_argument("--min-date",
                         help="Filter by date - either Year or YYYY-MM-DD")
+    parser.add_argument("--species",
+                        help="Filter by species name - either latin or czech")
     # group.add_argument("--geojson_output", "-geojs",
     #                    help="Path to output the GeoJSON file.")
 
@@ -205,7 +226,8 @@ if __name__ == "__main__":
 
     try:
         calculator.connect()
-        calculator.fetch_data(conf_query)
+        calculator.fetch_data(
+            build_query(conf_query, args.min_date, args.species))
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
         # if args.geojson_output is not None:
