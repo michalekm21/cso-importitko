@@ -104,8 +104,8 @@ class GeometryDistanceCalculator:
                                   feature.GetField("LatObs"))
                 # item
                 geom_item = ogr.Geometry(ogr.wkbPoint)
-                geom_item.AddPoint(feature.GetField("LonObs"),
-                                   feature.GetField("LatObs"))
+                geom_item.AddPoint(feature.GetField("LonItem"),
+                                   feature.GetField("LatItem"))
 
                 # Transformace geometrií
                 if geom_l is None:
