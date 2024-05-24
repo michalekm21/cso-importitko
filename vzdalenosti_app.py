@@ -152,7 +152,7 @@ class GeometryDistanceCalculator:
             raise
 
 
-def build_query(query_template, min_date, species_name):
+def build_query(query_template, min_date, species_name, limit=None):
     """Sestaví dotaz"""
     where_clause = ""
 
@@ -162,10 +162,15 @@ def build_query(query_template, min_date, species_name):
     where_clause = "WHERE "
     clause_conds = []
     if min_date is not None:
-        clause_conds.append(f"ObsDate >= '{min_date}'")
-    if min_date is not None:
+        date_string = min_date if len(min_date) != 4 else min_date + '-1-1'
+        clause_conds.append(f"ObsDate >= '{date_string}'")
+    if species_name is not None:
         clause_conds.append(f"(LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
                             f"(LOWER(NameLA) LIKE LOWER('%{species_name}%'))")
+
+    where_clause += " AND ".join(clause_conds) + (
+        f"LIMIT {limit}" if limit is not None else ""
+    )
 
     return query_template.format(conditions=where_clause)
 
@@ -230,7 +235,7 @@ def main():
     try:
         calculator.connect()
         calculator.fetch_data(
-            build_query(conf_query, args.min_date, args.species))
+            build_query(conf_query, args.min_date, args.species, 500))
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
         # if args.geojson_output is not None:
