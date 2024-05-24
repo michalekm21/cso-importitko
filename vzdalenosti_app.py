@@ -191,8 +191,9 @@ def build_query(query_template, min_date, species_name, square, limit=None):
         date_string = min_date if len(min_date) != 4 else min_date + '-1-1'
         clause_conds.append(f"(ObsDate >= '{date_string}')")
     if species_name is not None:
-        clause_conds.append(f"((LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
-                            f"(LOWER(NameLA) LIKE LOWER('%{species_name}%')))")
+        clause_conds.append(
+            f"((LOWER(NameCS) LIKE LOWER('%{species_name}%')) OR"
+            f" (LOWER(NameLA) LIKE LOWER('%{species_name}%')))")
     if square is not None:
         clause_conds.append(
             f"((SUBSTRING(SiteName, 1, 6) RLIKE '{square}') > 0)")
