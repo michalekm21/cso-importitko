@@ -190,9 +190,6 @@ if __name__ == "__main__":
                         required=True if conf_password is None else False,
                         default=conf_password,
                         help="Password for the database.")
-    parser.add_argument("--sql",
-                        required=True if conf_query is None else False,
-                        default=conf_query, help="SQL query to execute.")
     group.add_argument("--shp_output", "-shp",
                        help="Path to output the SHP file.")
     group.add_argument("--geojson_output", "-geojs",
@@ -205,7 +202,7 @@ if __name__ == "__main__":
 
     try:
         calculator.connect()
-        calculator.fetch_data(args.sql)
+        calculator.fetch_data(conf_query)
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
         if args.geojson_output is not None:
