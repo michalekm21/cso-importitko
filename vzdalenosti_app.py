@@ -192,8 +192,8 @@ if __name__ == "__main__":
                         help="Password for the database.")
     group.add_argument("--shp_output", "-shp",
                        help="Path to output the SHP file.")
-    group.add_argument("--geojson_output", "-geojs",
-                       help="Path to output the GeoJSON file.")
+    # group.add_argument("--geojson_output", "-geojs",
+    #                    help="Path to output the GeoJSON file.")
 
     args = parser.parse_args()
 
