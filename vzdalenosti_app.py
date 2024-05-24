@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 
 class GeometryDistanceCalculator:
+    """Počítá vzdálenosti z Geometrie"""
     def __init__(self, database, hostname, username, password):
         self.dsn = (
             f"MYSQL:{database},host={hostname},user={username},"
@@ -14,7 +15,13 @@ class GeometryDistanceCalculator:
         )
         self.ds = None
         self.layer = None
-       
+        
+        self.out_layer = None
+        self.out_ds = None
+        
+        self.output_path = "vzdalenosti"
+        self.driver_name = 'GeoJSON'
+
         # Nastavení logování
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s - %(levelname)s - %(message)s')
@@ -50,6 +57,7 @@ class GeometryDistanceCalculator:
             raise
 
     def fetch_data(self, sql):
+        """Stahuje data z DB"""
         try:
             self.layer = self.ds.ExecuteSQL(sql)
             self.logger.info("Data načtena z databáze.")
@@ -57,33 +65,43 @@ class GeometryDistanceCalculator:
         except Exception as e:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
-
-    def calculate_distance(self):
-        output_path = "vzdalenosti.shp"
         
-        driver = ogr.GetDriverByName('ESRI Shapefile')
-        if os.path.exists(output_path):
-            driver.DeleteDataSource(output_path)
+    def save_data(self):
+        """Ukládá stažená data"""
+        try:
+            driver = ogr.GetDriverByName(self.driver_name)
+            if os.path.exists(self.output_path):
+                driver.DeleteDataSource(self.output_path)
 
-        out_ds = driver.CreateDataSource(output_path)
-        out_layer = out_ds.CopyLayer(self.layer, self.layer.GetName())
-        out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
-        out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
-        out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
+            self.out_ds = driver.CreateDataSource(self.output_path)
+            self.out_layer = self.out_ds.CopyLayer(
+                self.layer, self.layer.GetName())
+        except Exception as e:
+            self.logger.exception("Chyba při ukládání ustažených dat: %s", e)
+            raise
+        finally:
+            self.release()
+
+    def calculate_distance(self):        
+        """ Počítá vzdálenost ze stažených dat"""
+        self.out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
+        self.out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
+        self.out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
 
         try:
-            for feature in out_layer:
-                # Transformace geometrií
+            for feature in self.out_layer:
+                # Získání geometrií
                 geom_l = feature.GetGeomFieldRef(0)
-                
+                # obs
                 geom_obs = ogr.Geometry(ogr.wkbPoint)
                 geom_obs.AddPoint(feature.GetField("LonObs"),
                                   feature.GetField("LatObs"))
-            
+                # item
                 geom_item = ogr.Geometry(ogr.wkbPoint)
                 geom_item.AddPoint(feature.GetField("LonObs"),
                                    feature.GetField("LatObs"))
                 
+                # Transformace geometrií
                 geom_l.Transform(self.transform)
                 geom_obs.Transform(self.transform)
                 geom_item.Transform(self.transform)
@@ -97,32 +115,19 @@ class GeometryDistanceCalculator:
                 feature.SetField('item2line', item2line)
                 feature.SetField('obs2item', obs2item)
                 
-                out_layer.SetFeature(feature)
+                self.out_layer.SetFeature(feature)
                 
-                self.logger.info(
-                    "Vzdálenost mezi obs a line: %s metrů", obs2line)
+                # self.logger.info(
+                #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
                 
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
         
-        del out_ds  # Finish and save data
-        del out_layer
-
-    def export_to_shapefile(self):
-        """Export data to SHP file."""
-        output_path = "vzdalenosti.shp"
-        
-        driver = ogr.GetDriverByName('ESRI Shapefile')
-        if os.path.exists(output_path):
-            driver.DeleteDataSource(output_path)
-
-        out_ds = driver.CreateDataSource(output_path)
-        out_layer = out_ds.CopyLayer(self.layer, self.layer.GetName())
-
-        del out_ds  # Finish and save data
-        del out_layer
-        self.logger.info(f"Data exported to SHP: {output_path}")
+        del self.out_ds  # Finish and save data
+        del self.out_layer
+        self.logger.info(
+            f"Data exported to {self.driver_name}: {self.output_path}")
 
     def release(self):
         try:
@@ -136,6 +141,7 @@ class GeometryDistanceCalculator:
 
 # Použití třídy
 if __name__ == "__main__":
+    osr.UseExceptions()
     load_dotenv(".env")
     hostname = os.environ.get("DB_HOST")
     database = os.environ.get("DB_NAME")
@@ -149,6 +155,7 @@ if __name__ == "__main__":
     try:
         calculator.connect()
         calculator.fetch_data(query)
+        calculator.save_data()
         calculator.calculate_distance()
-    finally:
-        calculator.release()
+    except Exception as ex:
+        calculator.logger.error(ex)
