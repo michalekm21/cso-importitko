@@ -1,13 +1,9 @@
-#!/bin/env python3
-"""Aplikace pro výpočet vzdálenosti pro LSD"""
+"""Nástroj pro výpočet vzdálenosti a export dat"""
 
 import os
 import warnings
 import logging
-import argparse
-import yaml
 from osgeo import osr, ogr
-from dotenv import load_dotenv
 from halo import Halo
 
 os.environ['SHAPE_ENCODING'] = "utf-8"
@@ -37,7 +33,6 @@ class GeometryDistanceCalculator:
 
         # Definice transformace na SRID 5514
         self.source_srs = osr.SpatialReference()
-        # Prohozené souřadnice
         self.source_srs.SetAxisMappingStrategy(osr.OAMS_TRADITIONAL_GIS_ORDER)
         # Předpokládáme, že původní souřadnice jsou ve WGS84
         self.source_srs.ImportFromEPSG(4326)
@@ -67,7 +62,7 @@ class GeometryDistanceCalculator:
                 self.logger.info("Připojeno k databázi.")
                 spinner.succeed("DB connected")
         except Exception as e:
-            spinner.fail(f"Failed connecting to DB: {e}")
+            spinner.fail("Failed connecting to DB")
             self.logger.exception("Chyba při připojování k databázi: %s", e)
             raise
 
@@ -81,7 +76,7 @@ class GeometryDistanceCalculator:
             spinner.succeed("Data downloaded")
             return self.layer
         except Exception as e:
-            spinner.fail(f"Fetching data failed: {e}")
+            spinner.fail("Fetching data failed")
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
@@ -101,7 +96,7 @@ class GeometryDistanceCalculator:
                 self.layer, self.layer.GetName())
             spinner.succeed("Data saved")
         except Exception as e:
-            spinner.fail(f"Failed saving the data to disk: {e}")
+            spinner.fail("Failed saving the data to disk")
             self.logger.exception("Chyba při ukládání ustažených dat: %s", e)
             raise
         finally:
@@ -152,7 +147,7 @@ class GeometryDistanceCalculator:
                 #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
 
         except Exception as e:
-            spinner.fail(f"Failde calculating the distances: {e}")
+            spinner.fail("Failed calculating the distances")
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
 
@@ -173,113 +168,6 @@ class GeometryDistanceCalculator:
                 self.logger.info("Připojení k databázi bylo uzavřeno.")
                 spinner.succeed("DB connection released")
         except Exception as e:
-            spinner.fail(f"Failed releasing the connection: {e}")
+            spinner.fail("Failed releasing the connection")
             self.logger.exception("Chyba při uvolňování zdrojů: %s", e)
             raise
-
-
-def build_query(query_template, min_date, species_name, square, limit=None):
-    """Sestaví dotaz"""
-    where_clause = ""
-
-    if not (min_date is not None or species_name is not None):
-        return query_template.format(conditions="")
-
-    where_clause = "WHERE "
-    clause_conds = []
-    if min_date is not None:
-        date_string = min_date if len(min_date) != 4 else min_date + '-1-1'
-        clause_conds.append(f"(ObsDate >= '{date_string}')")
-    if species_name is not None:
-        clause_conds.append(
-            f"((LOWER(NameCS) LIKE LOWER('%{species_name}%')) OR"
-            f" (LOWER(NameLA) LIKE LOWER('%{species_name}%')))")
-    if square is not None:
-        clause_conds.append(
-            f"((SUBSTRING(SiteName, 1, 6) RLIKE '{square}') > 0)")
-
-    where_clause += " AND ".join(clause_conds) + (
-        f" LIMIT {limit}" if limit is not None else ""
-    )
-
-    return query_template.format(conditions=where_clause)
-
-
-def main():
-    """main"""
-    # údaje z .env < config.yaml
-    load_dotenv(".env")
-    with open('config.yaml', 'r', encoding="utf-8") as file:
-        config = yaml.safe_load(file)
-    # podmíněné přiřazení proměnných
-    conf_hostname = (
-        config['hostname'] if 'hostname' in config
-        else os.environ.get("DB_HOST"))
-    conf_database = (
-        config['database'] if 'database' in config
-        else os.environ.get("DB_NAME"))
-    conf_username = (
-        config['username'] if 'username' in config
-        else os.environ.get("DB_USER"))
-    conf_password = (
-        config['password'] if 'password' in config
-        else os.environ.get("DB_PASS"))
-    conf_query = (
-        config['query_template'] if 'query_template' in config
-        else os.environ.get("DB_QUERY"))
-
-    # Parametry příkazu
-    parser = argparse.ArgumentParser(
-        description="Export LSD data with distances to SHP and GeoJSON.")
-    # group = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument("--hostname",
-                        required=True if conf_hostname is None else False,
-                        default=conf_hostname,
-                        help="Hostname of the MariaDB server.")
-    parser.add_argument("--database",
-                        required=True if conf_database is None else False,
-                        default=conf_database,
-                        help="Database name.")
-    parser.add_argument("--username",
-                        required=True if conf_username is None else False,
-                        default=conf_username,
-                        help="Username for the database.")
-    parser.add_argument("--password",
-                        required=True if conf_password is None else False,
-                        default=conf_password,
-                        help="Password for the database.")
-    parser.add_argument("--shp-output", "-shp", required=True,
-                        help="Path to output the SHP file.")
-    parser.add_argument("--min-date",
-                        help="Filter by date - either Year or YYYY-MM-DD")
-    parser.add_argument("--species",
-                        help="Filter by species name - either latin or czech")
-    parser.add_argument("--square",
-                        help="Filter by KFME id - accepts regex")
-    # group.add_argument("--geojson_output", "-geojs",
-    #                    help="Path to output the GeoJSON file.")
-
-    args = parser.parse_args()
-
-    calculator = GeometryDistanceCalculator(
-        'michalek', args.hostname, args.username, args.password)
-
-    try:
-        calculator.connect()
-        calculator.fetch_data(
-            build_query(
-                conf_query, args.min_date, args.species, args.square, 20))
-        if args.shp_output is not None:
-            calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
-        # if args.geojson_output is not None:
-        #     calculator.save_data("GeoJSON", "vzdalenosti.geojson")
-        calculator.calculate_distance()
-    except Exception as ex:
-        calculator.logger.error(ex)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
