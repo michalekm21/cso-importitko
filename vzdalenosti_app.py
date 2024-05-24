@@ -167,9 +167,7 @@ def build_query(query_template, min_date, species_name, limit=50):
         clause_conds.append(f"(LOWER(NameCS) LIKE LOWER('%{species_name}%'))OR"
                             f"(LOWER(NameLA) LIKE LOWER('%{species_name}%'))")
     where_clause = " AND ".join(clause_conds)
-    where_clause += "LIMIT 50"    
 
-    print(query_template.format(conditions=where_clause))
     return query_template.format(conditions=where_clause)
 
 
