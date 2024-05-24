@@ -2,9 +2,9 @@
 """Aplikace pro výpočet vzdálenosti pro LSD"""
 
 import os
-import yaml
 import logging
 import argparse
+import yaml
 from osgeo import osr, ogr
 from dotenv import load_dotenv
 
@@ -108,6 +108,8 @@ class GeometryDistanceCalculator:
                                    feature.GetField("LatObs"))
 
                 # Transformace geometrií
+                if geom_l is None:
+                    continue    # přeskočit pokud nepatří k linii
                 geom_l.Transform(self.transform)
                 geom_obs.Transform(self.transform)
                 geom_item.Transform(self.transform)
@@ -123,8 +125,8 @@ class GeometryDistanceCalculator:
 
                 self.out_layer.SetFeature(feature)
 
-                self.logger.info(
-                    "Vzdálenost mezi obs a line: %s metrů", obs2line)
+                # self.logger.info(
+                #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
 
         except Exception as e:
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
@@ -146,14 +148,13 @@ class GeometryDistanceCalculator:
             raise
 
 
-# Použití třídy
 if __name__ == "__main__":
     osr.UseExceptions()
     # údaje z .env < config.yaml
     load_dotenv(".env")
     with open('config.yaml', 'r', encoding="utf-8") as file:
         config = yaml.safe_load(file)
-
+    # podmíněné přiřazení proměnných
     conf_hostname = (
         config['hostname'] if 'hostname' in config
         else os.environ.get("DB_HOST"))
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     # Parametry příkazu
     parser = argparse.ArgumentParser(
         description="Export LSD data with distances to SHP and GeoJSON.")
-    group = parser.add_mutually_exclusive_group(required=True)
+    # group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument("--hostname",
                         required=True if conf_hostname is None else False,
                         default=conf_hostname,
@@ -190,8 +191,10 @@ if __name__ == "__main__":
                         required=True if conf_password is None else False,
                         default=conf_password,
                         help="Password for the database.")
-    group.add_argument("--shp_output", "-shp",
-                       help="Path to output the SHP file.")
+    parser.add_argument("--shp-output", "-shp", required=True,
+                        help="Path to output the SHP file.")
+    parser.add_argument("--min-date",
+                        help="Filter by date - either Year or YYYY-MM-DD")
     # group.add_argument("--geojson_output", "-geojs",
     #                    help="Path to output the GeoJSON file.")
 
@@ -205,8 +208,8 @@ if __name__ == "__main__":
         calculator.fetch_data(conf_query)
         if args.shp_output is not None:
             calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
-        if args.geojson_output is not None:
-            calculator.save_data("GeoJSON", "vzdalenosti.geojson")
+        # if args.geojson_output is not None:
+        #     calculator.save_data("GeoJSON", "vzdalenosti.geojson")
         calculator.calculate_distance()
     except Exception as ex:
         calculator.logger.error(ex)
