@@ -4,7 +4,12 @@
 import os
 import argparse
 import yaml
-from dotenv import load_dotenv
+import sys
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:
+    pass
+
 from distance_calculator import GeometryDistanceCalculator
 from query_builder import build_query
 
@@ -12,9 +17,18 @@ from query_builder import build_query
 def main():
     """main"""
     # údaje z .env < config.yaml
-    load_dotenv(".env")
+    conf_hostname = None
+    conf_database = None
+    conf_username = None
+    conf_password = None
+    conf_query = None
+
     with open('config.yaml', 'r', encoding="utf-8") as file:
         config = yaml.safe_load(file)
+
+    if 'dotenv' in sys.modules:
+        load_dotenv(".env")
+
     # podmíněné přiřazení proměnných
     conf_hostname = (
         config['hostname'] if 'hostname' in config
@@ -60,26 +74,42 @@ def main():
                         help="Filter by species name - either latin or czech")
     parser.add_argument("--square",
                         help="Filter by KFME id - accepts regex")
-    # group.add_argument("--geojson_output", "-geojs",
-    #                    help="Path to output the GeoJSON file.")
+    parser.add_argument("--limit",
+                        help="Maximum number of records")
+    parser.add_argument("--geojson-output", "-geojson",
+                        help="Path to output the GeoJSON file.")
+    parser.add_argument("--csv-output", "-csv",
+                        help="Path to output the csv file.")
 
     args = parser.parse_args()
 
-    calculator = GeometryDistanceCalculator(
-        'michalek', args.hostname, args.username, args.password)
+    with GeometryDistanceCalculator('michalek', args.hostname,
+                                    args.username, args.password
+                                    ) as calculator:
 
-    try:
-        calculator.connect()
-        calculator.fetch_data(
-            build_query(
-                conf_query, args.min_date, args.species, args.square, 20))
-        if args.shp_output is not None:
-            calculator.save_data("ESRI Shapefile", "vzdalenosti.shp")
-        # if args.geojson_output is not None:
-        #     calculator.save_data("GeoJSON", "vzdalenosti.geojson")
-        calculator.calculate_distance()
-    except RuntimeError as ex:
-        calculator.logger.error(ex)
+        try:
+            calculator.connect()
+            calculator.fetch_data(
+                build_query(
+                    conf_query, args.min_date,
+                    args.species, args.square, args.limit))
+
+            calculator.load_layer()
+
+            calculator.calculate_distance()
+
+            if args.shp_output is not None:
+                calculator.save_data("ESRI Shapefile",
+                                     f"{args.shp_output}.shp")
+            if args.geojson_output is not None:
+                calculator.save_data("GeoJSON",
+                                     f"{args.geojson_output}.geojson")
+            if args.csv_output is not None:
+                calculator.save_data("CSV",
+                                     f"{args.csv_output}.csv")
+            # calculator.calculate_distance()
+        except RuntimeError as ex:
+            calculator.logger.error(ex)
 
 
 if __name__ == "__main__":

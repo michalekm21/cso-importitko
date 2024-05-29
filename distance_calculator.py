@@ -4,7 +4,11 @@ import os
 import warnings
 import logging
 from osgeo import osr, ogr
-from halo import Halo
+try:
+    from halo import Halo
+except ModuleNotFoundError:
+    pass
+
 
 os.environ['SHAPE_ENCODING'] = "utf-8"
 osr.UseExceptions()
@@ -22,6 +26,8 @@ class GeometryDistanceCalculator:
 
         self.out_layer = None
         self.out_ds = None
+
+        self.work_layer = None
 
         self.output_path = None
         self.driver_name = None
@@ -42,11 +48,18 @@ class GeometryDistanceCalculator:
         self.target_srs.ImportFromProj4(
             "+proj=krovak +lat_0=49.5 +lon_0=24.8333333333333 "
             "+alpha=30.2881397527778 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel "
-            "+towgs84=589,76,480,0,0,0,0 +units=m +no_defs +type=crs"
-            )
+            "+towgs84=570.8,85.7,462.8,4.998,1.587,5.261,3.56 +units=m "
+            "+no_defs +type=crs"
+        )
 
         self.transform = osr.CoordinateTransformation(
             self.source_srs, self.target_srs)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.release()
 
     def connect(self):
         """Připojení k DB"""
@@ -80,6 +93,23 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
+    def load_layer(self):
+        """Ukládá stažená data"""
+        spinner = Halo(text='Loading data', spinner='dots')
+        spinner.start()
+
+        try:
+            driver = ogr.GetDriverByName('MEMORY')
+
+            ds = driver.CreateDataSource('memData')
+            self.work_layer = ds.CopyLayer(
+                self.layer, self.layer.GetName())
+            spinner.succeed("Data saved")
+        except Exception as e:
+            spinner.fail("Failed saving the data to disk")
+            self.logger.exception("Chyba při načtení ustažených dat: %s", e)
+            raise
+
     def save_data(self, driver_name, output_path):
         """Ukládá stažená data"""
         spinner = Halo(text='Saving data', spinner='dots')
@@ -93,16 +123,17 @@ class GeometryDistanceCalculator:
 
             self.out_ds = driver.CreateDataSource(self.output_path)
             self.out_layer = self.out_ds.CopyLayer(
-                self.layer, self.layer.GetName())
+                self.work_layer, self.layer.GetName())
             spinner.succeed("Data saved")
         except Exception as e:
             spinner.fail("Failed saving the data to disk")
             self.logger.exception("Chyba při ukládání ustažených dat: %s", e)
             raise
         finally:
-            self.release()
+            pass
+            # self.release()
 
-    def calculate_distance(self):
+    def _calculate_distance(self):
         """ Počítá vzdálenost ze stažených dat"""
         spinner = Halo(text='Calculating the distances', spinner='dots')
         spinner.start()
@@ -157,6 +188,60 @@ class GeometryDistanceCalculator:
         self.logger.info(
             "Data exported to %s : %s ", self.driver_name, self.output_path)
         spinner.succeed(f"Data exported to {self.driver_name}")
+
+    def calculate_distance(self):
+        """ Počítá vzdálenost ze stažených dat"""
+        spinner = Halo(text='Calculating the distances', spinner='dots')
+        spinner.start()
+        try:
+            self.work_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
+            self.work_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
+            self.work_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
+        except BaseException:
+            self.logger.exception('Nezdařilo se přidat sloupce')
+
+        try:
+            for feature in self.work_layer:
+                # Získání geometrií
+                geom_l = feature.GetGeomFieldRef(0)
+                if geom_l is None:
+                    # print(feature.GetField("kfme"))
+                    continue    # !!přeskočit pokud schází geometrie linie
+
+                # obs
+                geom_obs = ogr.Geometry(ogr.wkbPoint)
+                geom_obs.AddPoint(float(feature.GetField("LonObs")),
+                                  float(feature.GetField("LatObs")))
+                # item
+                geom_item = ogr.Geometry(ogr.wkbPoint)
+                geom_item.AddPoint(float(feature.GetField("LonItem")),
+                                   float(feature.GetField("LatItem")))
+
+                # Transformace geometrií
+                geom_l.Transform(self.transform)
+                geom_obs.Transform(self.transform)
+                geom_item.Transform(self.transform)
+
+                # Výpočet vzdálenosti mezi linií a bodem
+                obs2line = geom_l.Distance(geom_obs)
+                item2line = geom_l.Distance(geom_item)
+                obs2item = geom_item.Distance(geom_obs)
+
+                feature.SetField('obs2line', obs2line)
+                feature.SetField('item2line', item2line)
+                feature.SetField('obs2item', obs2item)
+
+                self.work_layer.SetFeature(feature)
+
+                # self.logger.info(
+                #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
+
+        except Exception as e:
+            spinner.fail("Failed calculating the distances")
+            self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
+            raise
+
+        spinner.succeed("Distances calculated")
 
     def release(self):
         """Uvolnit připojení k DB"""
