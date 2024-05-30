@@ -28,6 +28,7 @@ class GeometryDistanceCalculator:
         self.out_ds = None
 
         self.work_layer = None
+        self.work_ds = None
 
         self.output_path = None
         self.driver_name = None
@@ -93,6 +94,7 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
+
     def load_layer(self):
         """Ukládá stažená data"""
         spinner = Halo(text='Loading data', spinner='dots')
@@ -101,12 +103,12 @@ class GeometryDistanceCalculator:
         try:
             driver = ogr.GetDriverByName('MEMORY')
 
-            ds = driver.CreateDataSource('memData')
-            self.work_layer = ds.CopyLayer(
+            self.work_ds = driver.CreateDataSource('memData')
+            self.work_layer = self.work_ds.CopyLayer(
                 self.layer, self.layer.GetName())
             spinner.succeed("Data saved")
         except Exception as e:
-            spinner.fail("Failed saving the data to disk")
+            spinner.fail("Failed isaving the data to disk")
             self.logger.exception("Chyba při načtení ustažených dat: %s", e)
             raise
 
