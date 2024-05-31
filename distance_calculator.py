@@ -28,6 +28,7 @@ class GeometryDistanceCalculator:
         self.out_ds = None
 
         self.work_layer = None
+        self.work_ds = None
 
         self.output_path = None
         self.driver_name = None
@@ -93,6 +94,7 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
+
     def load_layer(self):
         """Ukládá stažená data do mezipaměti"""
         spinner = Halo(text='Loading data', spinner='dots')
@@ -101,12 +103,12 @@ class GeometryDistanceCalculator:
         try:
             driver = ogr.GetDriverByName('MEMORY')
 
-            ds = driver.CreateDataSource('memData')
-            self.work_layer = ds.CopyLayer(
-                self.layer, self.layer.GetName(), ['OVERWRITE=YES'])
+            self.work_ds = driver.CreateDataSource('memData')
+            self.work_layer = self.work_ds.CopyLayer(
+                self.layer, self.layer.GetName())
             spinner.succeed("Data saved")
         except Exception as e:
-            spinner.fail("Failed saving the data to disk")
+            spinner.fail("Failed isaving the data to disk")
             self.logger.exception("Chyba při načtení ustažených dat: %s", e)
             raise
 
@@ -260,3 +262,95 @@ class GeometryDistanceCalculator:
             spinner.fail("Failed releasing the connection")
             self.logger.exception("Chyba při uvolňování zdrojů: %s", e)
             raise
+
+
+    def prepare_work_layer(self):
+        # Získání názvu vrstvy
+        layer_name = self.layer.GetName()
+
+        # Vytvoření nového driveru pro paměťový datový zdroj
+        driver = ogr.GetDriverByName('MEMORY')
+        if driver is None:
+            raise RuntimeError("OGR driver 'MEMORY' not available")
+
+        # Vytvoření nového paměťového datového zdroje
+        self.work_ds = driver.CreateDataSource('memData')
+        if self.work_ds is None:
+            raise RuntimeError("Failed to create data source")
+
+        # Vytvoření nové vrstvy s typem geometrie 'wkbPoint'
+        self.work_layer = self.work_ds.CreateLayer(layer_name, geom_type=ogr.wkbPoint)
+        if self.work_layer is None:
+            raise RuntimeError("Failed to create new layer")
+
+        # Přidání stejných polí do nové vrstvy
+        layer_defn = self.layer.GetLayerDefn()
+        for i in range(layer_defn.GetFieldCount()):
+            field_defn = layer_defn.GetFieldDefn(i)
+            self.work_layer.CreateField(field_defn)
+
+        spinner = Halo(text='Calculating the distances', spinner='dots')
+
+        spinner.start()
+        self.work_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
+        self.work_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
+        self.work_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
+
+        # Přidání bodové geometrie do nové vrstvy
+        try:
+            for feature in self.layer:
+                geom = feature.GetGeometryRef()
+                if geom is None:
+                    continue
+
+
+                # Vytvoření nového prvku s bodovou geometrií
+                new_feature = ogr.Feature(self.work_layer.GetLayerDefn())
+
+                # Kopírování hodnot polí z původního prvku
+                for i in range(feature.GetFieldCount()):
+                    new_feature.SetField(i, feature.GetField(i))
+
+                geom_l = feature.GetGeomFieldRef(0)
+                if geom_l is None:
+                    # print(feature.GetField("kfme"))
+                    continue    # !!přeskočit pokud schází geometrie linie
+
+                # obs
+                geom_obs = ogr.Geometry(ogr.wkbPoint)
+                geom_obs.AddPoint(float(feature.GetField("LonObs")),
+                                    float(feature.GetField("LatObs")))
+                # item
+                geom_item = ogr.Geometry(ogr.wkbPoint)
+                geom_item.AddPoint(float(feature.GetField("LonItem")),
+                                    float(feature.GetField("LatItem")))
+
+                # Transformace geometrií
+                geom_l.Transform(self.transform)
+                geom_obs.Transform(self.transform)
+                geom_item.Transform(self.transform)
+
+                # Výpočet vzdálenosti mezi linií a bodem
+                obs2line = geom_l.Distance(geom_obs)
+                item2line = geom_l.Distance(geom_item)
+                obs2item = geom_item.Distance(geom_obs)
+
+                new_feature.SetField('obs2line', obs2line)
+                new_feature.SetField('item2line', item2line)
+                new_feature.SetField('obs2item', obs2item)
+
+                new_feature.SetGeometry(geom_item)
+
+                self.logger.info(
+                    "Vzdálenost mezi obs a line: %s metrů", obs2line)
+
+                # Přidání nového prvku do nové vrstvy
+                self.work_layer.CreateFeature(new_feature)
+                new_feature = None
+
+        except Exception as e:
+            spinner.fail("Failed calculating the distances")
+            self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
+            raise
+
+        spinner.succeed(f"Data exported to {self.driver_name}")

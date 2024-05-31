@@ -94,9 +94,11 @@ def main():
                     conf_query, args.min_date,
                     args.species, args.square, args.limit))
 
-            calculator.load_layer()
+            # calculator.load_layer()
 
-            calculator.calculate_distance()
+            # calculator.calculate_distance()
+
+            calculator.prepare_work_layer()
 
             if args.shp_output is not None:
                 calculator.save_data("ESRI Shapefile",
