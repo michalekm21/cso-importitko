@@ -94,7 +94,6 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
-
     def load_layer(self):
         """Ukládá stažená data do mezipaměti"""
         spinner = Halo(text='Loading data', spinner='dots')
@@ -263,8 +262,8 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při uvolňování zdrojů: %s", e)
             raise
 
-
     def prepare_work_layer(self):
+        """Připraví pracovní vrstvu"""
         # Získání názvu vrstvy
         layer_name = self.layer.GetName()
 
@@ -279,7 +278,8 @@ class GeometryDistanceCalculator:
             raise RuntimeError("Failed to create data source")
 
         # Vytvoření nové vrstvy s typem geometrie 'wkbPoint'
-        self.work_layer = self.work_ds.CreateLayer(layer_name, geom_type=ogr.wkbPoint)
+        self.work_layer = self.work_ds.CreateLayer(
+            layer_name, geom_type=ogr.wkbPoint)
         if self.work_layer is None:
             raise RuntimeError("Failed to create new layer")
 
@@ -303,7 +303,6 @@ class GeometryDistanceCalculator:
                 if geom is None:
                     continue
 
-
                 # Vytvoření nového prvku s bodovou geometrií
                 new_feature = ogr.Feature(self.work_layer.GetLayerDefn())
 
@@ -319,11 +318,11 @@ class GeometryDistanceCalculator:
                 # obs
                 geom_obs = ogr.Geometry(ogr.wkbPoint)
                 geom_obs.AddPoint(float(feature.GetField("LonObs")),
-                                    float(feature.GetField("LatObs")))
+                                  float(feature.GetField("LatObs")))
                 # item
                 geom_item = ogr.Geometry(ogr.wkbPoint)
                 geom_item.AddPoint(float(feature.GetField("LonItem")),
-                                    float(feature.GetField("LatItem")))
+                                   float(feature.GetField("LatItem")))
 
                 # Transformace geometrií
                 geom_l.Transform(self.transform)
