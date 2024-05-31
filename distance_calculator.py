@@ -63,7 +63,7 @@ class GeometryDistanceCalculator:
 
     def connect(self):
         """Připojení k DB"""
-        spinner = Halo(text='Connecting to DB :', spinner='dots')
+        spinner = Halo(text='Connecting to DB -', spinner='dots')
         spinner.start()
         try:
             with warnings.catch_warnings():
@@ -94,7 +94,7 @@ class GeometryDistanceCalculator:
             raise
 
     def load_layer(self):
-        """Ukládá stažená data"""
+        """Ukládá stažená data do mezipaměti"""
         spinner = Halo(text='Loading data', spinner='dots')
         spinner.start()
 
@@ -103,7 +103,7 @@ class GeometryDistanceCalculator:
 
             ds = driver.CreateDataSource('memData')
             self.work_layer = ds.CopyLayer(
-                self.layer, self.layer.GetName())
+                self.layer, self.layer.GetName(), ['OVERWRITE=YES'])
             spinner.succeed("Data saved")
         except Exception as e:
             spinner.fail("Failed saving the data to disk")
@@ -137,6 +137,7 @@ class GeometryDistanceCalculator:
         """ Počítá vzdálenost ze stažených dat"""
         spinner = Halo(text='Calculating the distances', spinner='dots')
         spinner.start()
+
         self.out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
         self.out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
         self.out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
@@ -194,10 +195,13 @@ class GeometryDistanceCalculator:
         spinner = Halo(text='Calculating the distances', spinner='dots')
         spinner.start()
         try:
-            self.work_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
-            self.work_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
-            self.work_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
-        except BaseException:
+            self.work_layer.CreateField(
+                ogr.FieldDefn("obs2line", ogr.OFTReal))
+            self.work_layer.CreateField(
+                ogr.FieldDefn("item2line", ogr.OFTReal))
+            self.work_layer.CreateField(
+                ogr.FieldDefn("obs2item", ogr.OFTReal))
+        except RuntimeError:
             self.logger.exception('Nezdařilo se přidat sloupce')
 
         try:
