@@ -84,6 +84,9 @@ def main():
 
     args = parser.parse_args()
 
+    if not (args.csv_output or args.geojson_output or args.csv_output):
+        parser.error('Prosím, zadejte alespoň jeden výstupový soubor.')
+
     with GeometryDistanceCalculator('michalek', args.hostname,
                                     args.username, args.password
                                     ) as calculator:
