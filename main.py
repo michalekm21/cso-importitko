@@ -11,8 +11,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from src.distance_calculator import GeometryDistanceCalculator
-from src.query_builder import build_query
+from utils.distance_calculator import GeometryDistanceCalculator
+from utils.query_builder import build_query
 
 
 def main():
