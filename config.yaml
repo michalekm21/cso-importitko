@@ -10,7 +10,7 @@ query_template: >
     oi.LonObs, 
     oi.LatItem, 
     oi.LonItem, 
-    oi.ObsDate, 
+    ol.ObsDate, 
     tr.NameCS, 
     tr.NameLA 
   FROM `vw_lsd_oi` oi 
