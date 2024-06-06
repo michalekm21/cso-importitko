@@ -10,9 +10,9 @@ query_template: >
     oi.LonObs, 
     oi.LatItem, 
     oi.LonItem, 
-    ObsDate, 
-    NameCS, 
-    NameLA 
+    oi.ObsDate, 
+    tr.NameCS, 
+    tr.NameLA 
   FROM `vw_lsd_oi` oi 
     INNER JOIN `vw_lsd_ol` ol 
       ON oi.ObsListId = ol.Id 
