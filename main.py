@@ -3,8 +3,9 @@
 
 import os
 import argparse
-import yaml
 import sys
+import yaml
+
 try:
     from dotenv import load_dotenv
 except ModuleNotFoundError:
@@ -49,7 +50,7 @@ def main():
     # Parametry příkazu
     parser = argparse.ArgumentParser(
         description="Export LSD data with distances to SHP and GeoJSON.")
-    # group = parser.add_mutually_exclusive_group(required=True)
+    # group = parser.add_argument_group(required=True)
     parser.add_argument("--hostname",
                         required=True if conf_hostname is None else False,
                         default=conf_hostname,
@@ -66,8 +67,6 @@ def main():
                         required=True if conf_password is None else False,
                         default=conf_password,
                         help="Password for the database.")
-    parser.add_argument("--shp-output", "-shp", required=True,
-                        help="Path to output the SHP file.")
     parser.add_argument("--min-date",
                         help="Filter by date - either Year or YYYY-MM-DD")
     parser.add_argument("--species",
@@ -76,6 +75,8 @@ def main():
                         help="Filter by KFME id - accepts regex")
     parser.add_argument("--limit",
                         help="Maximum number of records")
+    parser.add_argument("--shp-output", "-shp",
+                        help="Path to output the SHP file.")
     parser.add_argument("--geojson-output", "-geojson",
                         help="Path to output the GeoJSON file.")
     parser.add_argument("--csv-output", "-csv",
