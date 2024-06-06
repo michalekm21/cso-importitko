@@ -2,8 +2,8 @@
 """Aplikace pro výpočet LSD vzdálenosti pro příkazovou řádku"""
 
 import os
-import argparse
 import sys
+import argparse
 import yaml
 
 try:
@@ -11,8 +11,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from distance_calculator import GeometryDistanceCalculator
-from query_builder import build_query
+from src.distance_calculator import GeometryDistanceCalculator
+from src.query_builder import build_query
 
 
 def main():
@@ -67,6 +67,7 @@ def main():
                         required=True if conf_password is None else False,
                         default=conf_password,
                         help="Password for the database.")
+    # Filtr
     parser.add_argument("--min-date",
                         help="Filter by date - either Year or YYYY-MM-DD")
     parser.add_argument("--species",
@@ -75,6 +76,7 @@ def main():
                         help="Filter by KFME id - accepts regex")
     parser.add_argument("--limit",
                         help="Maximum number of records")
+    # Výstup
     parser.add_argument("--shp-output", "-shp",
                         help="Path to output the SHP file.")
     parser.add_argument("--geojson-output", "-geojson",
