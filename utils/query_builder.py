@@ -5,7 +5,7 @@ def build_query(query_template, min_date, species_name, square, limit):
     """Sestaví dotaz"""
     where_clause = ""
     clause_conds = []
-    
+
     if min_date is not None:
         date_string = min_date if len(min_date) != 4 else min_date + '-1-1'
         clause_conds.append(f"(ObsDate >= '{date_string}')")
