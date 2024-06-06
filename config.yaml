@@ -1,5 +1,6 @@
 query_template: >
   SELECT 
+    oi.id,
     SUBSTRING(SiteName, 1, 6) kfme, 
     CASE SUBSTRING(SiteName, 12, 2) 
       WHEN 'p1' THEN sq.Path1Geometry 
