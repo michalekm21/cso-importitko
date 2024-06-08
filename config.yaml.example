@@ -1,0 +1,8 @@
+# Adresa serveru s DB
+hostname: mysql.hostname
+# Název DB
+database: lsd_database
+# Uživatelské jméno
+username: user
+# Heslo uživatele
+password: pass
