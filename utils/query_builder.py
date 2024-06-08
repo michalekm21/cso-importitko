@@ -1,10 +1,18 @@
-"""Staví dotaz na DB, s příslušnými filtry"""
+"""Sestaví dotaz na DB, s příslušnými filtry"""
+import utils.lib.yaml as yaml
 
 
-def build_query(query_template, min_date, species_name, square, limit):
+def build_query(min_date, species_name, square, limit, user):
     """Sestaví dotaz"""
     where_clause = ""
     clause_conds = []
+
+    with open('query.yaml', 'r', encoding="utf-8") as file:
+        query_yaml = yaml.safe_load(file)
+        if user is not None:
+            query_template = query_yaml['template_user']
+        else:
+            query_template = query_yaml['template_no_user']
 
     if min_date is not None:
         date_string = min_date if len(min_date) != 4 else min_date + '-1-1'

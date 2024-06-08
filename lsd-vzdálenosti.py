@@ -22,7 +22,6 @@ def main():
     conf_database = None
     conf_username = None
     conf_password = None
-    conf_query = None
 
     with open('config.yaml', 'r', encoding="utf-8") as file:
         config = yaml.safe_load(file)
@@ -43,14 +42,10 @@ def main():
     conf_password = (
         config['password'] if 'password' in config
         else os.environ.get("DB_PASS"))
-    conf_query = (
-        config['query_template'] if 'query_template' in config
-        else os.environ.get("DB_QUERY"))
 
     # Parametry příkazu
     parser = argparse.ArgumentParser(
         description="Export LSD data with distances to SHP, GeoJSON and CSV.")
-
     # Kredence
     parser.add_argument("--hostname",
                         required=True if conf_hostname is None else False,
@@ -77,6 +72,8 @@ def main():
                         help="Filter by KFME id - accepts regex")
     parser.add_argument("--limit", "-l",
                         help="Maximum number of records")
+    parser.add_argument("--user",
+                        help="user")
     # Výstup
     parser.add_argument("--shp-output", "-shp",
                         help="Path to output the SHP file.")
@@ -97,13 +94,8 @@ def main():
         try:
             calculator.connect()
             calculator.fetch_data(
-                build_query(
-                    conf_query, args.min_date,
-                    args.species, args.square, args.limit))
-
-            # calculator.load_layer()
-
-            # calculator.calculate_distance()
+                build_query(args.min_date, args.species,
+                            args.square, args.limit, args.user))
 
             calculator.prepare_work_layer()
 
@@ -116,7 +108,6 @@ def main():
             if args.csv_output is not None:
                 calculator.save_data("CSV",
                                      f"{args.csv_output}.csv")
-            # calculator.calculate_distance()
         except RuntimeError as ex:
             calculator.logger.error(ex)
 
