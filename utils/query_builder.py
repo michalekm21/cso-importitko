@@ -12,8 +12,8 @@ def build_query(min_date, species_name, square, limit, user):
         if user is not None:
             query_template = query_yaml['template_user']
             clause_conds.append(
-                f"((LOWER(Observer) RLIKE LOWER('%{user}%')) OR"
-                f" (LOWER(ObserversEmail) RLIKE LOWER('%{user}%')))")
+                f"((LOWER(Observer) RLIKE LOWER('{user}')) OR"
+                f" (LOWER(ObserversEmail) RLIKE LOWER('{user}')))")
 
         else:
             query_template = query_yaml['template_no_user']
