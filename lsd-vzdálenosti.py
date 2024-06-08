@@ -70,11 +70,11 @@ def main():
     # Filtr
     parser.add_argument("--min-date",
                         help="Filter by date - either Year or YYYY-MM-DD")
-    parser.add_argument("--species",
+    parser.add_argument("--species", "-sp",
                         help="Filter by species name - either latin or czech")
-    parser.add_argument("--square",
+    parser.add_argument("--square", "-sq",
                         help="Filter by KFME id - accepts regex")
-    parser.add_argument("--limit",
+    parser.add_argument("--limit", "-l",
                         help="Maximum number of records")
     # Výstup
     parser.add_argument("--shp-output", "-shp",
@@ -89,9 +89,9 @@ def main():
     if not (args.csv_output or args.geojson_output or args.csv_output):
         parser.error('Prosím, zadejte alespoň jeden výstupový soubor.')
 
-    with GeometryDistanceCalculator('michalek', args.hostname,
-                                    args.username, args.password
-                                    ) as calculator:
+    with GeometryDistanceCalculator(
+            'michalek', args.hostname, args.username, args.password
+            ) as calculator:
 
         try:
             calculator.connect()
