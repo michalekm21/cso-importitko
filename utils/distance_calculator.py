@@ -4,7 +4,7 @@ import os
 import warnings
 import logging
 from osgeo import osr, ogr
-from lib.halo import Halo
+from utils.lib.halo import Halo
 
 os.environ['SHAPE_ENCODING'] = "utf-8"
 osr.UseExceptions()
