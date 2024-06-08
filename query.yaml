@@ -36,7 +36,10 @@ template_user: >
     oi.LonItem, 
     ol.ObsDate, 
     tr.NameCS, 
-    tr.NameLA 
+    tr.NameLA,
+    us.ObserverID,
+    us.Observer,
+    us.ObserversEmail 
   FROM `vw_lsd_oi` oi 
     INNER JOIN `vw_lsd_ol` ol 
       ON oi.ObsListId = ol.Id 
@@ -44,4 +47,6 @@ template_user: >
       ON oi.SpeciesId = tr.Taxon_ID 
     INNER JOIN project.LSD_Square sq 
       ON SUBSTRING(ol.SiteName, 1, 6) = sq.Square COLLATE utf8mb4_czech_ci 
+    LEFT JOIN avif.View_LSD_Users us
+      ON us.ObserverID = ol.ObsOwner
   {conditions};

@@ -22,9 +22,11 @@ def main():
     conf_database = None
     conf_username = None
     conf_password = None
-
-    with open('config.yaml', 'r', encoding="utf-8") as file:
-        config = yaml.safe_load(file)
+    try:
+        with open('config.yaml', 'r', encoding="utf-8") as file:
+            config = yaml.safe_load(file)
+    except FileNotFoundError:
+        config = []
 
     if 'dotenv' in sys.modules:
         load_dotenv(".env")
@@ -73,7 +75,7 @@ def main():
     parser.add_argument("--limit", "-l",
                         help="Maximum number of records")
     parser.add_argument("--user",
-                        help="user")
+                        help="Filter by user's Name or e-mail - accepts regex")
     # Výstup
     parser.add_argument("--shp-output", "-shp",
                         help="Path to output the SHP file.")
