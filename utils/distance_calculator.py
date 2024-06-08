@@ -90,23 +90,6 @@ class GeometryDistanceCalculator:
             self.logger.exception("Chyba při načítání dat: %s", e)
             raise
 
-    def load_layer(self):
-        """Ukládá stažená data do mezipaměti"""
-        spinner = Halo(text='Loading data', spinner='dots')
-        spinner.start()
-
-        try:
-            driver = ogr.GetDriverByName('MEMORY')
-
-            self.work_ds = driver.CreateDataSource('memData')
-            self.work_layer = self.work_ds.CopyLayer(
-                self.layer, self.layer.GetName())
-            spinner.succeed("Data saved")
-        except Exception as e:
-            spinner.fail("Failed isaving the data to disk")
-            self.logger.exception("Chyba při načtení ustažených dat: %s", e)
-            raise
-
     def save_data(self, driver_name, output_path):
         """Ukládá stažená data"""
         spinner = Halo(text='Saving data', spinner='dots')
@@ -290,5 +273,3 @@ class GeometryDistanceCalculator:
             spinner.fail("Failed calculating the distances")
             self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
             raise
-
-        spinner.succeed(f"Data exported to {self.driver_name}")
