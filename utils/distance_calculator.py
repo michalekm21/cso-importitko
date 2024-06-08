@@ -104,7 +104,7 @@ class GeometryDistanceCalculator:
             self.out_ds = driver.CreateDataSource(self.output_path)
             self.out_layer = self.out_ds.CopyLayer(
                 self.work_layer, self.layer.GetName())
-            spinner.succeed("Data saved")
+            spinner.succeed(f"Data saved as {driver_name}")
         except Exception as e:
             spinner.fail("Failed saving the data to disk")
             self.logger.exception("Chyba při ukládání ustažených dat: %s", e)
