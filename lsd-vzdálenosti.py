@@ -49,8 +49,9 @@ def main():
 
     # Parametry příkazu
     parser = argparse.ArgumentParser(
-        description="Export LSD data with distances to SHP and GeoJSON.")
-    # group = parser.add_argument_group(required=True)
+        description="Export LSD data with distances to SHP, GeoJSON and CSV.")
+
+    # Kredence
     parser.add_argument("--hostname",
                         required=True if conf_hostname is None else False,
                         default=conf_hostname,
