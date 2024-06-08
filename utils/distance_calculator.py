@@ -130,63 +130,6 @@ class GeometryDistanceCalculator:
             pass
             # self.release()
 
-    def _calculate_distance(self):
-        """ Počítá vzdálenost ze stažených dat"""
-        spinner = Halo(text='Calculating the distances', spinner='dots')
-        spinner.start()
-
-        self.out_layer.CreateField(ogr.FieldDefn("obs2line", ogr.OFTReal))
-        self.out_layer.CreateField(ogr.FieldDefn("item2line", ogr.OFTReal))
-        self.out_layer.CreateField(ogr.FieldDefn("obs2item", ogr.OFTReal))
-
-        try:
-            for feature in self.out_layer:
-                # Získání geometrií
-                geom_l = feature.GetGeomFieldRef(0)
-                if geom_l is None:
-                    # print(feature.GetField("kfme"))
-                    continue    # !!přeskočit pokud schází geometrie linie
-
-                # obs
-                geom_obs = ogr.Geometry(ogr.wkbPoint)
-                geom_obs.AddPoint(float(feature.GetField("LonObs")),
-                                  float(feature.GetField("LatObs")))
-                # item
-                geom_item = ogr.Geometry(ogr.wkbPoint)
-                geom_item.AddPoint(float(feature.GetField("LonItem")),
-                                   float(feature.GetField("LatItem")))
-
-                # Transformace geometrií
-                geom_l.Transform(self.transform)
-                geom_obs.Transform(self.transform)
-                geom_item.Transform(self.transform)
-
-                # Výpočet vzdálenosti mezi linií a bodem
-                obs2line = geom_l.Distance(geom_obs)
-                item2line = geom_l.Distance(geom_item)
-                obs2item = geom_item.Distance(geom_obs)
-
-                feature.SetField('obs2line', obs2line)
-                feature.SetField('item2line', item2line)
-                feature.SetField('obs2item', obs2item)
-
-                self.out_layer.SetFeature(feature)
-
-                # self.logger.info(
-                #     "Vzdálenost mezi obs a line: %s metrů", obs2line)
-
-        except Exception as e:
-            spinner.fail("Failed calculating the distances")
-            self.logger.exception("Chyba při výpočtu vzdálenosti: %s", e)
-            raise
-
-        spinner.succeed("Distances calculated")
-        del self.out_ds  # Finish and save data
-        del self.out_layer
-        self.logger.info(
-            "Data exported to %s : %s ", self.driver_name, self.output_path)
-        spinner.succeed(f"Data exported to {self.driver_name}")
-
     def calculate_distance(self):
         """ Počítá vzdálenost ze stažených dat"""
         spinner = Halo(text='Calculating the distances', spinner='dots')
