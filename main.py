@@ -4,7 +4,7 @@
 import os
 import sys
 import argparse
-import yaml
+import utils.lib.yaml as yaml
 
 try:
     from dotenv import load_dotenv

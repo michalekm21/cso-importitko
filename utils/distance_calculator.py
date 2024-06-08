@@ -4,11 +4,7 @@ import os
 import warnings
 import logging
 from osgeo import osr, ogr
-try:
-    from halo import Halo
-except ModuleNotFoundError:
-    pass
-
+from lib.halo import Halo
 
 os.environ['SHAPE_ENCODING'] = "utf-8"
 osr.UseExceptions()
