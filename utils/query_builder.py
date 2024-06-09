@@ -1,5 +1,5 @@
 """Sestaví dotaz na DB, s příslušnými filtry"""
-import utils.lib.yaml as yaml
+import yaml
 
 
 def build_query(min_date, species_name, square, limit, user):
