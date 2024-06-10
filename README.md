@@ -17,3 +17,5 @@ database: <JMÉNO DATABÁZE V NÍŽ BUDEME OPEROVAT>
 username: <UŽIVATELSKÉ JMÉNO>
 password: <HESLO>
 ```
+> [!WARNING]
+> Tento soubor musí být ve stejné jako soubor *lsd_vzdalenosti.py*, jinak nebude využit.
