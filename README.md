@@ -10,12 +10,13 @@ Tímto příkazem si můžete vypsat všechny možné paramnetry nástroje (filt
 python lsd_vzdalenosti.py -h
 ```
 ## Ukládání přihlašovacích údajů
-Pokud si nepřejete muset při každém spuštění nástroje zadávat své přihlašovací údaje, můžete je uložit do konfiguračního souboru *config.yaml*. Obsah tohoto souboru by měl mít takovýto formát:
+Pokud si nepřejete muset při každém spuštění nástroje zadávat své přihlašovací údaje, můžete je uložit do konfiguračního souboru *login.yaml*. Obsah tohoto souboru by měl mít takovýto formát:
 ```yaml
 hostname: <ADRESA SERVERU S DATY>
 database: <JMÉNO DATABÁZE V NÍŽ BUDEME OPEROVAT>
 username: <UŽIVATELSKÉ JMÉNO>
-password: <HESLO>
+password: <HESLO UŽIVATELE>
 ```
+Příklad takovéhoto nastavení se nachází v souboru *login.yaml.example*.
 > [!WARNING]
 > Tento soubor musí být ve stejné jako soubor *lsd_vzdalenosti.py*, jinak nebude využit.
