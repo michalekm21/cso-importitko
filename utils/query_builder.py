@@ -7,7 +7,7 @@ def build_query(min_date, species_name, square, limit, user):
     where_clause = ""
     clause_conds = []
 
-    with open('query.yaml', 'r', encoding="utf-8") as file:
+    with open('utils/query.yaml', 'r', encoding="utf-8") as file:
         query_yaml = yaml.safe_load(file)
         if user is not None:
             query_template = query_yaml['template_user']
