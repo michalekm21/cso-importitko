@@ -2,12 +2,12 @@ Toto je program, který stahuje geografická data a dopočítává potřebné vz
 ## Instalace závislostí
 Knihovny, potřebné pro spuštění nástroje doinstalujete pomocí tohoto příkazu:
 ```shell
-python -m pip install halo
+python-qgis -m pip install halo
 ```
 ## Výpis parametrů
 Tímto příkazem si můžete vypsat všechny možné paramnetry nástroje (filtrování, výstupy):
 ```shell
-python lsd_vzdalenosti.py -h
+python-qgis lsd_vzdalenosti.py -h
 ```
 ## Ukládání přihlašovacích údajů
 Pokud si nepřejete muset při každém spuštění nástroje zadávat své přihlašovací údaje, můžete je uložit do konfiguračního souboru *login.yaml*. Obsah tohoto souboru by měl mít takovýto formát:
