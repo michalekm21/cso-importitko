@@ -2,7 +2,7 @@ Toto je program, který stahuje geografická data a dopočítává potřebné vz
 ## Instalace závislostí
 Knihovny, potřebné pro spuštění nástroje doinstalujete pomocí tohoto příkazu:
 ```shell
-python -m pip install halo pyyaml
+python -m pip install halo
 ```
 ## Výpis parametrů
 Tímto příkazem si můžete vypsat všechny možné paramnetry nástroje (filtrování, výstupy):
