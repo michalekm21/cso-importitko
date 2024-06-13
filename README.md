@@ -11,7 +11,7 @@ Nástroj spouštíme následujícím příkazem.
 ```
 python <CESTA K SOUBORU lsd_vzdalenosti.py>
 ```
-> [INFO]
+> [!INFO]
 > Bez předešlého nastavení po vás bude tento nástroj požadovat kredence serveru a přihlašovací údaje.
 ## Výpis parametrů
 Tímto příkazem si můžete vypsat všechny možné paramnetry nástroje (filtrování, výstupy):
