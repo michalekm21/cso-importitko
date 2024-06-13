@@ -29,3 +29,5 @@ password: <HESLO UŽIVATELE>
 Příklad takovéhoto nastavení se nachází v souboru *login.yaml.example*.
 > [!WARNING]
 > Tento soubor musí být ve stejné jako soubor *lsd_vzdalenosti.py*, jinak nebude využit.
+## Změna dotazu vstupních dat
+[QUERY.md](utils/QUERY.md)
