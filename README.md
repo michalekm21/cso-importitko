@@ -30,4 +30,5 @@ Příklad takovéhoto nastavení se nachází v souboru *login.yaml.example*.
 > [!WARNING]
 > Tento soubor musí být ve stejné jako soubor *lsd_vzdalenosti.py*, jinak nebude využit.
 ## Změna dotazu vstupních dat
+Pokud si přejete změnit dotaz, jímž se získávají vstupní data, přečtěte si dokumentaci v tomto souboru:
 [QUERY.md](utils/QUERY.md)
