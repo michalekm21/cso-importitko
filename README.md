@@ -16,8 +16,16 @@ python <CESTA K SOUBORU lsd_vzdalenosti.py>
 ## Výpis parametrů
 Tímto příkazem si můžete vypsat všechny možné paramnetry nástroje (filtrování, výstupy):
 ```shell
-python lsd_vzdalenosti.py -h
+python <CESTA K SOUBORU lsd_vzdalenosti.py> -h
 ```
+## Data se jmény pozorovatel
+Ve výchozím nastavení nebudou výstupní data obstahovat Jména pozorovatel, pokud nejsou vyžadována k filtrování – z výkonnostních důvodů. Pokud si přejete, aby data obsahovala jména, i přez to, že se jimy nefiltruje, můžete toto omezení obejít takto:
+```
+python <CESTA K SOUBORU lsd_vzdalenosti.py> --user '.*'
+```
+Neboť filtrování pomocí jmen umožňuje použití regexu, můžeme použít takovou podmínku, jíž budou vyhovovat všechna jména.
+> [!WARNING]
+> Filtrovani pomocí jmen může značně zvýšit čas stahování dat.
 ## Ukládání přihlašovacích údajů
 Pokud si nepřejete muset při každém spuštění nástroje zadávat své přihlašovací údaje, můžete je uložit do konfiguračního souboru *login.yaml*. Obsah tohoto souboru by měl mít takovýto formát:
 ```yaml
