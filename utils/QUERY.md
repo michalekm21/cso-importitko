@@ -8,7 +8,7 @@ Pole, o nichž tyto nástroje předpokládají, že budou ve vstupních datech. 
 - Název druhu – *NameCS* a *NameLA* – český a latinský
 - Datum pozorování *ObsDate*
 - Sloupec Sitename obsahující v prvních 6 místech KFME ID
-### Jménem uživatele:
+### Filtrování jménem uživatele:
 Z důvodu výkonu používá tento nástroj rozdílný dotaz (template_user) v případě filtrování dle uživatele. Pokud už toto rozdělení není nutné, mohou oba dotazy být totožné.
 - *Observer* – Jméno pozorovatele
 - *ObserversEmail* – e-mail pozorovatele
