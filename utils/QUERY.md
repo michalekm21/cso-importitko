@@ -1,4 +1,4 @@
-Pole, o nichž tyto nástroje předpokládají, že budou ve vstupních datech. Dotazy můžete změnit v *query.yaml*; výstup bude zahrnovat všechny vybírané sloupce. 
+Dotazy můžete změnit v *query.yaml*; výstup bude zahrnovat všechny vybírané sloupce. Nasleduji pole, o nichž tyto nástroje předpokládají, že budou ve vstupních datech.
 ## výpočet vzdálenosti (*distance_calculator.py*):
 - Souřadnice pozorovatele a pozorovaného v WGS84: *LatObs, LonObs, LatItem, LonItem*
 - Jeden sloupek s geometrií linie
